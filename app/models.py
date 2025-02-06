@@ -1,5 +1,3 @@
-# models.py
-
 import torch
 from transformers import AutoTokenizer, AutoModelForCausalLM
 
@@ -13,22 +11,17 @@ if tokenizer.pad_token is None or tokenizer.pad_token_id is None:
     tokenizer.add_special_tokens({"pad_token": CUSTOM_PAD_TOKEN})
     print(f"Added pad token: {CUSTOM_PAD_TOKEN}")
 
-print("Loading model...")
+print("Loading model on CPU...")
+# Force the model to load on CPU by setting device_map="cpu"
 model = AutoModelForCausalLM.from_pretrained(
     MODEL_NAME,
     torch_dtype=torch.float16,
-    device_map="auto"
+    device_map="cpu"
 )
 
-# Save current device (e.g., cuda:0 if available)
-device = next(model.parameters()).device
-
-# Move model to CPU to perform the resize, which can be less memory-intensive on CPU
-model = model.to("cpu")
 print("Resizing token embeddings on CPU...")
 model.resize_token_embeddings(len(tokenizer))
 print("Resizing complete.")
 
-# Move the model back to GPU (or its original device)
+device = torch.device("cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu")
 model = model.to(device)
-print("Model moved back to", device)
