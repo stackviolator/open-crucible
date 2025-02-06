@@ -48,3 +48,6 @@ Thumbs.db
 
 # Ignore log files
 app.log
+
+# Ignore TODO.md
+TODO.md
