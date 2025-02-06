@@ -3,7 +3,6 @@
 import torch
 from transformers import AutoTokenizer, AutoModelForCausalLM
 
-MODEL_NAME = "meta-llama/Llama-3.1-8B"
 CUSTOM_PAD_TOKEN = "[PAD]"
 
 # Hard-coded system prompt
@@ -67,7 +66,13 @@ def load_model(model_name: str):
     print(f"Pad token is now: {tokenizer.pad_token} (ID: {tokenizer.pad_token_id})")
     return model
 
-DEFAULT_MODEL_NAME = "meta-llama/Llama-3.1-8B"
+# My CUDA machine is itty bitty so I use the 4-bit quantized model. 
+# My mac is bigger so then I use the 16-bit model.
+if torch.cuda.is_available():
+    DEFAULT_MODEL_NAME = "unsloth/Meta-Llama-3.1-8B-bnb-4bit"
+else:
+    DEFAULT_MODEL_NAME = "meta-llama/Llama-3.1-8B"
+
 print("Loading default model...")
 load_model(DEFAULT_MODEL_NAME)
 print("Default model loaded.")
