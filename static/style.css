@@ -1,173 +1,282 @@
-/* Body with a dark background and lighter text */
-body {
-    font-family: Arial, sans-serif;
-    background-color: #1c1c1c;  /* Dark grey background */
-    margin: 0;
-    padding: 20px;
-    color: #ccc;  /* General text color */
-}
+/* static/style.css */
 
-/* Container with a slightly lighter grey background */
-.container {
+/* Top Bar Styles */
+.top-bar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 80px;  /* Adjusted height */
+    background-color: rgba(28, 28, 28, 0.8);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    z-index: 1000;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 20px;
+  }
+  
+  .top-bar-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  
+  .hamburger-btn {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 1.5rem;
+    cursor: pointer;
+  }
+  
+  .btn-home {
+    background-color: #402840;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    font-size: 1.1rem;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+  }
+  
+  .btn-home:hover {
+    background-color: #3e263e;
+  }
+  
+  .top-bar-right {
+    display: flex;
+    gap: 10px;
+  }
+  
+  .btn-top {
+    background-color: #3f273f;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    font-size: 1.1rem;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+  }
+  
+  .btn-top:hover {
+    background-color: #402840;
+  }
+
+  /* Sidebar Styles (unchanged except for dropdown naming) */
+.sidebar {
+    position: fixed;
+    top: 80px; /* Below the top bar */
+    left: 0;
+    transform: translateX(-100%);  /* Fully hidden off-canvas */
+    width: 250px;
+    height: calc(100% - 80px);
+    background-color: #2a2a2a;
+    padding: 20px;
+    box-shadow: 2px 0 5px rgba(0, 0, 0, 0.3);
+    overflow-y: auto;
+    transition: transform 0.3s ease;
+    z-index: 900;
+  }
+
+  .sidebar.active {
+    transform: translateX(0);
+  }
+  
+  /* Generic Dropdown Styles */
+  .dropdown .dropdown-header {
+    margin: 0;
+    padding: 8px;
+    background-color: #3a3a3a;
+    cursor: pointer;
+    border-radius: 8px;
+    user-select: none;
+    font-size: 1.2rem;
+    font-weight: bold;
+    letter-spacing: 0.05rem;
+    color: #fff;
+    transition: background-color 0.2s ease;
+  }
+  
+  .dropdown .dropdown-header:hover {
+    background-color: #444;
+  }
+  
+  /* Animate Dropdown Content */
+  .dropdown-content {
+    max-height: 0;
+    overflow: hidden;
+    opacity: 0;
+    transition: max-height 0.4s ease, opacity 0.4s ease;
+    margin-top: 10px;
+  }
+
+  .dropdown-content section {
+    margin-bottom: 15px;
+  }
+
+  .sidebar .styled-input {
+    max-width: 90%;
+  }
+
+  .dropdown-content.active {
+    max-height: 500px; /* Adjust as needed for content */
+    opacity: 1;
+  }
+  
+  /* Adjust the container to start below the top bar */
+  .container {
     max-width: 800px;
-    margin: 0 auto;
-    background: #2a2a2a;  /* Dark container that contrasts with the body */
+    margin: 100px auto 0 auto;  /* Top margin adjusted to allow room for the top bar */
+    background: #2a2a2a;
     padding: 20px;
     border-radius: 8px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
     color: #ddd;
-}
-
-h1, h2 {
-    color: #ddd;
-}
-
-/* Styled prompt and display boxes */
-.prompt-box, .display-box {
-    border: 1px solid #444;
-    padding: 10px;
-    background-color: #3a3a3a;
-    border-radius: 4px;
-    margin-bottom: 20px;
-    color: #eee;
-}
-
-/* Styled token display containers */
-.token-display {
-    border: 1px solid #444;
-    padding: 10px;
-    background-color: #333;
-    border-radius: 4px;
-    margin-bottom: 20px;
-    font-size: 1.1em;
-    color: #eee;
-}
-
-/* Each token span */
-.token {
-    padding: 2px 4px;
-    margin: 2px;
-    border-radius: 3px;
-    transition: background-color 0.2s;
-    cursor: default;
-    color: #000 !important;  /* Force token text to be black */
-}
-
-/* On hover, all tokens get a light blue background */
-.token:hover {
-    background-color: #cce5ff !important;
-}
-
-/* Spinner styles */
-.spinner {
-    text-align: center;
-    margin: 20px 0;
-}
-
-/* Hide element with .hidden */
-.hidden {
-    display: none;
-}
-
-/* Loader animation */
-.loader {
-    border: 8px solid #444; /* Darker grey for the spinner's base */
-    /* Use one of your provided colors for the accent */
-    border-top: 8px solid #402840;
-    border-radius: 50%;
-    width: 50px;
-    height: 50px;
-    margin: 0 auto 10px;
-    animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-}
-
-/* Button Styles */
-.btn-submit {
-    /* Create a gradient using your provided hex colors */
-    background: linear-gradient(135deg, #3f273f 0%, #402840 25%, #3e263e 50%, #3e283f 75%, #3d253d 100%);
-    border: none;
-    color: white;
-    padding: 12px 24px;
-    font-size: 1rem;
-    font-weight: bold;
-    border-radius: 30px;
-    cursor: pointer;
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
-    margin-top: 10px;
-}
-
-/* Hover and Focus Effects for the button */
-.btn-submit:hover,
-.btn-submit:focus {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
-}
-
-/* Active Effect for the button */
-.btn-submit:active {
-    transform: translateY(0);
-    box-shadow: none;
-}
-
-/* Styles for the input elements */
-.styled-input {
-    padding: 8px 12px;
-    border: 1px solid #555;
-    border-radius: 4px;
-    background-color: #444;
-    color: #eee;
-    font-size: 1rem;
-    width: 100%;
-    max-width: 400px;
-    margin-top: 5px;
-}
-
-.styled-label {
-    font-weight: bold;
-    margin-top: 10px;
-    display: block;
-    color: #ddd;
-}
-
-/* Add a subtle glow effect to the button when hovered */
-.btn-submit:hover {
-    box-shadow: 0 0 10px rgba(63, 39, 63, 0.4);
-}
-
-/* Toast container styling */
-.toast {
-    position: fixed;
-    bottom: 20px;
-    right: 20px;
-    background-color: #333;
-    color: #fff;
-    padding: 12px 20px;
-    border-radius: 4px;
-    opacity: 0.9;
-    z-index: 1000;
-    transition: opacity 0.5s ease, transform 0.5s ease;
-    font-family: Arial, sans-serif;
-    margin-top: 10px;
-}
-
-/* Different styles for success and error messages */
-.toast.success {
-    background-color: #28a745; /* green */
-}
-.toast.error {
-    background-color: #dc3545; /* red */
-}
-.toast.info {
-    background-color: #17a2b8; /* blue-ish */
-}
-
-/* Fade-out animation class */
-.toast.fade-out {
-    opacity: 0;
-    transform: translateY(20px);
-}
+  }
+  
+  /* (Rest of your existing CSS remains unchanged) */
+  body {
+      font-family: Arial, sans-serif;
+      background-color: #1c1c1c;
+      margin: 0;
+      padding: 20px;
+      color: #ccc;
+  }
+  
+  h1, h2 {
+      color: #ddd;
+  }
+  
+  .prompt-box, .display-box {
+      border: 1px solid #444;
+      padding: 10px;
+      background-color: #3a3a3a;
+      border-radius: 4px;
+      margin-bottom: 20px;
+      color: #eee;
+  }
+  
+  .token-display {
+      border: 1px solid #444;
+      padding: 10px;
+      background-color: #333;
+      border-radius: 4px;
+      margin-bottom: 20px;
+      font-size: 1.1em;
+      color: #eee;
+  }
+  
+  .token {
+      padding: 2px 4px;
+      margin: 2px;
+      border-radius: 3px;
+      transition: background-color 0.2s;
+      cursor: default;
+      color: #000 !important;
+  }
+  
+  .token:hover {
+      background-color: #cce5ff !important;
+  }
+  
+  .spinner {
+      text-align: center;
+      margin: 20px 0;
+  }
+  
+  .hidden {
+      display: none;
+  }
+  
+  .loader {
+      border: 8px solid #444;
+      border-top: 8px solid #402840;
+      border-radius: 50%;
+      width: 50px;
+      height: 50px;
+      margin: 0 auto 10px;
+      animation: spin 1s linear infinite;
+  }
+  
+  @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+  }
+  
+  .btn-submit {
+      background: linear-gradient(135deg, #3f273f 0%, #402840 25%, #3e263e 50%, #3e283f 75%, #3d253d 100%);
+      border: none;
+      color: white;
+      padding: 12px 24px;
+      font-size: 1rem;
+      font-weight: bold;
+      border-radius: 30px;
+      cursor: pointer;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      margin-top: 10px;
+  }
+  
+  .btn-submit:hover,
+  .btn-submit:focus {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+  }
+  
+  .btn-submit:active {
+      transform: translateY(0);
+      box-shadow: none;
+  }
+  
+  .styled-input {
+      padding: 8px 12px;
+      border: 1px solid #555;
+      border-radius: 4px;
+      background-color: #444;
+      color: #eee;
+      font-size: 1rem;
+      width: 100%;
+      max-width: 400px;
+      margin-top: 5px;
+  }
+  
+  .styled-label {
+      font-weight: bold;
+      margin-top: 10px;
+      display: block;
+      color: #ddd;
+  }
+  
+  .toast {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background-color: #333;
+      color: #fff;
+      padding: 12px 20px;
+      border-radius: 4px;
+      opacity: 0.9;
+      z-index: 1000;
+      transition: opacity 0.5s ease, transform 0.5s ease;
+      font-family: Arial, sans-serif;
+      margin-top: 10px;
+  }
+  
+  .toast.success {
+      background-color: #28a745;
+  }
+  .toast.error {
+      background-color: #dc3545;
+  }
+  .toast.info {
+      background-color: #17a2b8;
+  }
+  
+  .toast.fade-out {
+      opacity: 0;
+      transform: translateY(20px);
+  }
+  
