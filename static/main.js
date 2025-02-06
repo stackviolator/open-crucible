@@ -1,9 +1,8 @@
 // static/main.js
 
-// Updated pastel color palette for tokens
+// Updated pastel color palette for tokens, blue is reserved for hover
 const defaultTokenColors = [
     "#FFD1DC", // pastel pink
-    "#C2E9FB", // pastel blue
     "#C5E3BF", // pastel green
     "#FFFFCC", // pastel yellow
     "#FFEBCC"  // pastel peach
