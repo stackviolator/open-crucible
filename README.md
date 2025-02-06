@@ -46,7 +46,7 @@ Open Crucible is a playground for experimenting with prompt injections and under
 1. **Clone the Repository:**
 
    ```bash
-   git clone https://github.com/your-username/open-crucible.git
+   git clone https://github.com/stackviolator/open-crucible.git
    cd open-crucible
    ```
 
@@ -68,25 +68,7 @@ Open Crucible is a playground for experimenting with prompt injections and under
 Start the server with:
 
 ```bash
-uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+uvicorn app.main:app --host 127.0.0.1 --port 8000 --proxy-headers
 ```
 
 Once running, open http://localhost:8000 in your browser.
-
-### Usage
-
-1. **Enter a Prompt**  
-   Type your custom prompt into the textarea provided on the web interface.
-
-2. **Set Maximum New Tokens**  
-   Specify the number of new tokens to generate.
-
-3. **Submit**  
-   Click the "Submit" button to send the prompt to the model.
-
-4. **View Results**  
-   The page will display:
-   - The combined prompt (system + user)
-   - The tokens corresponding to the user prompt
-   - The raw model output (including any special tokens)
-   - The cleaned output tokens after processing
