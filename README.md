@@ -26,7 +26,7 @@ Open Crucible is a playground for experimenting with prompt injections and under
   The FastAPI application entrypoint. It includes the routes and runs the server using Uvicorn.
 
 - **`schemas.py`**  
-  (Not shown in the code snippet) Should contain Pydantic models for request validation, such as the `GenerationRequest`.
+  Contains Pydantic models for request validation, such as the `GenerationRequest`.
 
 ---
 
