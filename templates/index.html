@@ -10,6 +10,33 @@
 <body>
     <div class="container">
         <h1>We ❤️ Open Crucible 😊</h1>
+
+        <section>
+            <label for="maxTokens" class="styled-label">Max new tokens:</label>
+            <input id="maxTokens" type="number" value="100" class="styled-input" />
+        </section>
+
+        <section>
+            <h2>Model Choice:</h2>
+            <select id="modelChoice" class="styled-input">
+                <option value="de0b4c67-de5e-4bbf-82ec-6fffce8e1b83">Llama-3.1-8B (Default)</option>
+                <option value="3cb9bc3f-05a8-4644-8b83-9d7010edf301">Llama-3.1-8B 4bit Quantized</option>
+            </select>
+        </section>
+
+        <div id="modelSpinner" class="spinner hidden">
+            <div class="loader"></div>
+        </div>
+        <div id="modelStatusMessage"></div>
+
+        <section>
+            <h2>Select System Prompt:</h2>
+            <select id="systemPromptChoice" class="styled-input">
+                {% for option in prompt_options %}
+                    <option value="{{ option }}">{{ option | capitalize }}</option>
+                {% endfor %}
+            </select>
+        </section>
         
         <section>
             <h2>System Prompt:</h2>
@@ -21,12 +48,6 @@
         <section>
             <h2>User Prompt:</h2>
             <textarea id="userPrompt" rows="4" cols="70" class="styled-input" placeholder="Type your prompt here..."></textarea>
-            <br/><br/>
-        </section>
-        
-        <section>
-            <label for="maxTokens" class="styled-label">Max new tokens:</label>
-            <input id="maxTokens" type="number" value="100" class="styled-input" />
             <br/><br/>
             <!-- Updated Submit Button -->
             <button id="submitBtn" class="btn-submit">Submit</button>

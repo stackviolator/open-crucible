@@ -138,3 +138,36 @@ h1, h2 {
 .btn-submit:hover {
     box-shadow: 0 0 10px rgba(63, 39, 63, 0.4);
 }
+
+/* Toast container styling */
+.toast {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background-color: #333;
+    color: #fff;
+    padding: 12px 20px;
+    border-radius: 4px;
+    opacity: 0.9;
+    z-index: 1000;
+    transition: opacity 0.5s ease, transform 0.5s ease;
+    font-family: Arial, sans-serif;
+    margin-top: 10px;
+}
+
+/* Different styles for success and error messages */
+.toast.success {
+    background-color: #28a745; /* green */
+}
+.toast.error {
+    background-color: #dc3545; /* red */
+}
+.toast.info {
+    background-color: #17a2b8; /* blue-ish */
+}
+
+/* Fade-out animation class */
+.toast.fade-out {
+    opacity: 0;
+    transform: translateY(20px);
+}

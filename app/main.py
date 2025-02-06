@@ -1,4 +1,5 @@
 # main.py
+
 import logging
 from fastapi import FastAPI
 from app.routes import router
