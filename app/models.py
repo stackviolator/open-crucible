@@ -1,3 +1,5 @@
+# app/models.py
+
 import torch
 from transformers import AutoTokenizer, AutoModelForCausalLM
 
@@ -23,6 +25,14 @@ if tokenizer.pad_token is None or tokenizer.pad_token_id is None:
     tokenizer.add_special_tokens({"pad_token": CUSTOM_PAD_TOKEN})
     print(f"Added pad token: {CUSTOM_PAD_TOKEN}")
 
+# Explicitly ensure the pad token and pad token id are set
+tokenizer.pad_token = CUSTOM_PAD_TOKEN
+if tokenizer.pad_token_id is None or tokenizer.pad_token_id < 0:
+    # Retrieve the pad token id from the tokenizer's vocabulary
+    vocab = tokenizer.get_vocab()
+    tokenizer.pad_token_id = vocab.get(CUSTOM_PAD_TOKEN)
+    print(f"Set pad token ID to: {tokenizer.pad_token_id}")
+
 print("Loading model on CPU...")
 # Force the model to load on CPU by setting device_map="cpu"
 model = AutoModelForCausalLM.from_pretrained(
@@ -31,8 +41,7 @@ model = AutoModelForCausalLM.from_pretrained(
     device_map="cpu"
 )
 
-# Set the pad_token_id in both the tokenizer and the model config
-tokenizer.pad_token = CUSTOM_PAD_TOKEN
+# Set the pad_token_id in the model's config as well
 model.config.pad_token_id = tokenizer.pad_token_id
 
 print("Resizing token embeddings on CPU...")
