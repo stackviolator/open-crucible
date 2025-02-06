@@ -6,8 +6,8 @@ from fastapi.templating import Jinja2Templates
 import logging
 from datetime import datetime
 
-from models import model, tokenizer, SYSTEM_PROMPT
-from schemas import GenerationRequest
+from app.models import model, tokenizer, SYSTEM_PROMPT
+from app.schemas import GenerationRequest
 
 router = APIRouter()
 templates = Jinja2Templates(directory="templates")

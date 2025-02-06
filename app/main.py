@@ -1,7 +1,7 @@
 # main.py
 import logging
 from fastapi import FastAPI
-from routes import router
+from app.routes import router
 from fastapi.staticfiles import StaticFiles
 
 # Configure logging to output to both the console and a file ("app.log")
