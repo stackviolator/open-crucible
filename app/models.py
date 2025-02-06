@@ -38,12 +38,10 @@ if tokenizer.pad_token_id is None or tokenizer.pad_token_id < 0:
     tokenizer.pad_token_id = vocab.get(CUSTOM_PAD_TOKEN, tokenizer.eos_token_id)
     print(f"Set pad token ID to: {tokenizer.pad_token_id}")
 
-print("Loading model on CPU...")
-# Force the model to load on CPU by setting device_map="cpu"
 model = AutoModelForCausalLM.from_pretrained(
     MODEL_NAME,
     torch_dtype=torch.float16,
-    device_map="cpu"
+    device_map="auto"
 )
 
 # Update the model's config with the pad token id.
@@ -52,9 +50,6 @@ model.config.pad_token_id = tokenizer.pad_token_id
 print("Resizing token embeddings on CPU...")
 model.resize_token_embeddings(len(tokenizer))
 print("Resizing complete.")
-
-device = torch.device("cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu")
-model = model.to(device)
 
 print(f"Pad token is now: {tokenizer.pad_token} (ID: {tokenizer.pad_token_id})")
 print("Model and tokenizer loaded.")
