@@ -1,0 +1,65 @@
+<!-- templates/index.html -->
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>Open Crucible</title>
+    <link rel="icon" href="/static/favicon.ico" type="image/x-icon" />
+    <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+    <div class="container">
+        <h1>We ❤️ Open Crucible 😊</h1>
+        
+        <section>
+            <h2>System Prompt:</h2>
+            <div class="prompt-box">
+                {{ system_prompt }}
+            </div>
+        </section>
+        
+        <section>
+            <h2>User Prompt:</h2>
+            <textarea id="userPrompt" rows="4" cols="70" class="styled-input" placeholder="Type your prompt here..."></textarea>
+            <br/><br/>
+        </section>
+        
+        <section>
+            <label for="maxTokens" class="styled-label">Max new tokens:</label>
+            <input id="maxTokens" type="number" value="100" class="styled-input" />
+            <br/><br/>
+            <!-- Updated Submit Button -->
+            <button id="submitBtn" class="btn-submit">Submit</button>
+        </section>
+
+        <!-- Spinner element (hidden by default) -->
+        <div id="spinner" class="spinner hidden">
+            <div class="loader"></div>
+            <p>Generating text...</p>
+        </div>
+
+        <hr />
+
+        <section>
+            <h2>Prompt Passed to Model:</h2>
+            <div id="displayCombinedPrompt" class="display-box"></div>
+        </section>
+
+        <section>
+            <h2>User Tokens:</h2>
+            <div id="userTokenDisplay" class="token-display"></div>
+        </section>
+        
+        <section>
+            <h2>Model Output:</h2>
+            <div id="displayOutputText" class="display-box"></div>
+        </section>
+
+        <section>
+            <h2>Output Tokens:</h2>
+            <div id="outputTokenDisplay" class="token-display"></div>
+        </section>
+    </div>
+    <script src="/static/main.js"></script>
+</body>
+</html>

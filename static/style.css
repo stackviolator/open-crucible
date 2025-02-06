@@ -1,0 +1,140 @@
+/* Body with a dark background and lighter text */
+body {
+    font-family: Arial, sans-serif;
+    background-color: #1c1c1c;  /* Dark grey background */
+    margin: 0;
+    padding: 20px;
+    color: #ccc;  /* General text color */
+}
+
+/* Container with a slightly lighter grey background */
+.container {
+    max-width: 800px;
+    margin: 0 auto;
+    background: #2a2a2a;  /* Dark container that contrasts with the body */
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    color: #ddd;
+}
+
+h1, h2 {
+    color: #ddd;
+}
+
+/* Styled prompt and display boxes */
+.prompt-box, .display-box {
+    border: 1px solid #444;
+    padding: 10px;
+    background-color: #3a3a3a;
+    border-radius: 4px;
+    margin-bottom: 20px;
+    color: #eee;
+}
+
+/* Styled token display containers */
+.token-display {
+    border: 1px solid #444;
+    padding: 10px;
+    background-color: #333;
+    border-radius: 4px;
+    margin-bottom: 20px;
+    font-size: 1.1em;
+    color: #eee;
+}
+
+/* Each token span */
+.token {
+    padding: 2px 4px;
+    margin: 2px;
+    border-radius: 3px;
+    transition: background-color 0.2s;
+    cursor: default;
+    color: #000 !important;  /* Force token text to be black */
+}
+
+/* On hover, all tokens get a light blue background */
+.token:hover {
+    background-color: #cce5ff !important;
+}
+
+/* Spinner styles */
+.spinner {
+    text-align: center;
+    margin: 20px 0;
+}
+
+/* Hide element with .hidden */
+.hidden {
+    display: none;
+}
+
+/* Loader animation */
+.loader {
+    border: 8px solid #444; /* Darker grey for the spinner's base */
+    /* Use one of your provided colors for the accent */
+    border-top: 8px solid #402840;
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    margin: 0 auto 10px;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Button Styles */
+.btn-submit {
+    /* Create a gradient using your provided hex colors */
+    background: linear-gradient(135deg, #3f273f 0%, #402840 25%, #3e263e 50%, #3e283f 75%, #3d253d 100%);
+    border: none;
+    color: white;
+    padding: 12px 24px;
+    font-size: 1rem;
+    font-weight: bold;
+    border-radius: 30px;
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    margin-top: 10px;
+}
+
+/* Hover and Focus Effects for the button */
+.btn-submit:hover,
+.btn-submit:focus {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+/* Active Effect for the button */
+.btn-submit:active {
+    transform: translateY(0);
+    box-shadow: none;
+}
+
+/* Styles for the input elements */
+.styled-input {
+    padding: 8px 12px;
+    border: 1px solid #555;
+    border-radius: 4px;
+    background-color: #444;
+    color: #eee;
+    font-size: 1rem;
+    width: 100%;
+    max-width: 400px;
+    margin-top: 5px;
+}
+
+.styled-label {
+    font-weight: bold;
+    margin-top: 10px;
+    display: block;
+    color: #ddd;
+}
+
+/* Add a subtle glow effect to the button when hovered */
+.btn-submit:hover {
+    box-shadow: 0 0 10px rgba(63, 39, 63, 0.4);
+}
