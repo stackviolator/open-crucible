@@ -1,6 +1,6 @@
 # Open Crucible
 
-![Open Crucible](img/open-crucible.gif)
+![Open Crucible](img/open-crucible.mp4)
 
 Open Crucible is a playground for experimenting with prompt injections and understanding how different prompt components interact with language models. Built with [FastAPI](https://fastapi.tiangolo.com/) and powered by [Hugging Face Transformers](https://huggingface.co/transformers/), this project provides a web interface to test and visualize how system prompts, user prompts, and tokenization influence model outputs.
 
