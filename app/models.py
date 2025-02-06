@@ -1,7 +1,7 @@
 import torch
 from transformers import AutoTokenizer, AutoModelForCausalLM
 
-MODEL_NAME = "https://huggingface.co/unsloth/Meta-Llama-3.1-8B-bnb-4bit"
+MODEL_NAME = "unsloth/Meta-Llama-3.1-8B-bnb-4bit"
 CUSTOM_PAD_TOKEN = "[PAD]"
 
 # Hard-coded system prompt
