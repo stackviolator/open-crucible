@@ -34,7 +34,7 @@ model = AutoModelForCausalLM.from_pretrained(
 )
 
 # If we added a new token, we must resize the model embeddings
-model.resize_token_embeddings(len(tokenizer), mean_resizing=False)
+model.resize_token_embeddings(len(tokenizer))
 
 # Set the pad_token_id in both the tokenizer and the model config
 tokenizer.pad_token = CUSTOM_PAD_TOKEN
