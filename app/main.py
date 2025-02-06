@@ -1,8 +1,18 @@
 # main.py
-
+import logging
 from fastapi import FastAPI
 from routes import router
 from fastapi.staticfiles import StaticFiles
+
+# Configure logging to output to both the console and a file ("app.log")
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(message)s",
+    handlers=[
+        logging.StreamHandler(),        # Logs to console
+        logging.FileHandler("app.log")    # Logs to file "app.log"
+    ]
+)
 
 app = FastAPI()
 
