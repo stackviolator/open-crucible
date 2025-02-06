@@ -20,17 +20,22 @@ SYSTEM_PROMPT = (
 print("Loading tokenizer...")
 tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
 
-# If the tokenizer doesn't have a dedicated pad token, add one
+# Set padding side (optional but often useful)
+tokenizer.padding_side = "right"
+
+# If the tokenizer doesn't have a dedicated pad token, add one.
 if tokenizer.pad_token is None or tokenizer.pad_token_id is None:
     tokenizer.add_special_tokens({"pad_token": CUSTOM_PAD_TOKEN})
     print(f"Added pad token: {CUSTOM_PAD_TOKEN}")
 
-# Explicitly ensure the pad token and pad token id are set
-tokenizer.pad_token = CUSTOM_PAD_TOKEN
+# Explicitly ensure pad_token is set.
+if tokenizer.pad_token is None:
+    tokenizer.pad_token = CUSTOM_PAD_TOKEN
+# Ensure pad_token_id is set; if not, fall back to eos_token_id.
 if tokenizer.pad_token_id is None or tokenizer.pad_token_id < 0:
-    # Retrieve the pad token id from the tokenizer's vocabulary
     vocab = tokenizer.get_vocab()
-    tokenizer.pad_token_id = vocab.get(CUSTOM_PAD_TOKEN)
+    # Use the pad token's id if available, otherwise use eos_token_id.
+    tokenizer.pad_token_id = vocab.get(CUSTOM_PAD_TOKEN, tokenizer.eos_token_id)
     print(f"Set pad token ID to: {tokenizer.pad_token_id}")
 
 print("Loading model on CPU...")
@@ -41,7 +46,7 @@ model = AutoModelForCausalLM.from_pretrained(
     device_map="cpu"
 )
 
-# Set the pad_token_id in the model's config as well
+# Update the model's config with the pad token id.
 model.config.pad_token_id = tokenizer.pad_token_id
 
 print("Resizing token embeddings on CPU...")
