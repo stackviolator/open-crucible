@@ -61,28 +61,30 @@ Open Crucible is a playground for experimenting with prompt injections and under
     pip install -r requirements.txt
     ```
 
-### Running the application
+### Running the Application
 
-    ```bash
-    uvicorn main:app --host 0.0.0.0 --port 8000
-    ```
+Start the server with:
 
-Once the server is running, open your browser and navigate to http://localhost:8000 to access the interactive interface.
+```bash
+uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+```
+
+Once running, open http://localhost:8000 in your browser.
 
 ### Usage
 
-    Enter a Prompt:
-    Type your custom prompt into the textarea provided on the web interface.
+1. **Enter a Prompt**  
+   Type your custom prompt into the textarea provided on the web interface.
 
-    Set Maximum New Tokens:
-    Specify the number of new tokens to generate.
+2. **Set Maximum New Tokens**  
+   Specify the number of new tokens to generate.
 
-    Submit:
-    Click the "Submit" button to send the prompt to the model.
+3. **Submit**  
+   Click the "Submit" button to send the prompt to the model.
 
-    View Results:
-    The page will display:
-    - The combined prompt (system + user)
-    - The tokens corresponding to the user prompt
-    - The raw model output (including any special tokens)
-    - The cleaned output tokens after processing
+4. **View Results**  
+   The page will display:
+   - The combined prompt (system + user)
+   - The tokens corresponding to the user prompt
+   - The raw model output (including any special tokens)
+   - The cleaned output tokens after processing
