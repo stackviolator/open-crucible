@@ -249,34 +249,80 @@
       display: block;
       color: #ddd;
   }
-  
+
   .toast {
-      position: fixed;
-      bottom: 20px;
-      right: 20px;
-      background-color: #333;
-      color: #fff;
-      padding: 12px 20px;
-      border-radius: 4px;
-      opacity: 0.9;
-      z-index: 1000;
-      transition: opacity 0.5s ease, transform 0.5s ease;
-      font-family: Arial, sans-serif;
-      margin-top: 10px;
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: #333;
+    color: #fff;
+    padding: 12px 20px;
+    border-radius: 4px;
+    opacity: 0.9;
+    z-index: 1000;
+    transition: opacity 0.5s ease, transform 0.5s ease;
+    font-family: Arial, sans-serif;
+}
+
+.toast.success {
+    background-color: #28a745;
+}
+
+.toast.error {
+    background-color: #dc3545;
+}
+
+.toast.info {
+    background-color: #17a2b8;
+}
+
+.toast.fade-out {
+    opacity: 0;
+    transform: translateX(-50%) translateY(20px);
+}
+  
+.footer {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 60px; /* Adjust height as needed */
+    background-color: rgba(28, 28, 28, 0.8);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 20px;
+    z-index: 1000;
   }
   
-  .toast.success {
-      background-color: #28a745;
-  }
-  .toast.error {
-      background-color: #dc3545;
-  }
-  .toast.info {
-      background-color: #17a2b8;
+.footer-links {
+    display: flex;
+    align-items: center;
   }
   
-  .toast.fade-out {
-      opacity: 0;
-      transform: translateY(20px);
+.footer-links a {
+    display: flex;
+    align-items: center;
+    color: #ccc;
+    text-decoration: none;
+    margin-right: 15px;
+    font-size: 1rem;
+    transition: color 0.2s ease;
   }
   
+.footer-links a:hover {
+    color: #fff;
+  }
+  
+.footer-icon {
+    margin-right: 5px;
+    vertical-align: middle;
+  }
+  
+.footer-note {
+    font-size: 0.9rem;
+    color: #ccc;
+  }

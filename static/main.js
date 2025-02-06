@@ -184,6 +184,8 @@ document.addEventListener("DOMContentLoaded", () => {
             
             // Show success toast on generation complete.
             showToast("Text generated successfully!", "success");
+
+            checkForConfettiAndToast();
         } catch (error) {
             console.error("Error during fetch:", error);
             document.getElementById("displayOutputText").innerText = "An error occurred: " + error;
@@ -191,4 +193,21 @@ document.addEventListener("DOMContentLoaded", () => {
             showToast("Error generating text", "error");
         }
     });
+
+    function checkForConfettiAndToast() {
+        const outputEl = document.getElementById('displayOutputText');
+        if (!outputEl) return;
+        const text = outputEl.innerText || "";
+        const lowerText = text.toLowerCase();
+        if (lowerText.includes("one") && lowerText.includes("morbillion")) {
+          // Trigger confetti effect using canvas-confetti
+          confetti({
+            particleCount: 150,
+            spread: 70,
+            origin: { y: 0.6 }
+          });
+          showToast("another morbilly in the bank", "success");
+        }
+      }
+
 });
