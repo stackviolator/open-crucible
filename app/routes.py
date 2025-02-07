@@ -79,7 +79,7 @@ def generate_text(request_data: GenerationRequest, request: Request):
     output_tokens = [tokenizer.decode([tid]) for tid in output_tokens[0]]
 
     logging.info(
-        f"Generated output for {client_ip} at {timestamp}: {full_text}"
+        f"Generated output for {client_ip} at {timestamp}: {generated_text_only}"
     )
 
     return {
