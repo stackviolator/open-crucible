@@ -299,3 +299,33 @@ def get_current_level(session: dict = Depends(get_session)):
     - A dictionary containing the current session level.
     """
     return {"level": session.get("level", 1)}
+
+@router.get("/config")
+def get_config(session: dict = Depends(get_session)):
+    """
+    Get the current configuration including max level, current model, and available models.
+    Requires a valid session.
+    
+    Parameters:
+    - session: User session obtained via JWT.
+    
+    Returns:
+    - Dictionary containing max_level, current_model, and model_options
+    
+    Raises:
+    - HTTPException (403) if the session is invalid.
+    """
+    if not session:
+        raise HTTPException(status_code=403, detail="Invalid session")
+        
+    # Get max level dynamically from SYSTEM_PROMPTS
+    max_level = max(int(k.split('-')[1]) for k in SYSTEM_PROMPTS.keys())
+    
+    # Get current model name (the one that's loaded)
+    current_model = model.config._name_or_path
+    
+    return {
+        "max_level": max_level,
+        "current_model": current_model,
+    }
+

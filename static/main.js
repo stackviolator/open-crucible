@@ -1,16 +1,24 @@
 // static/main.js
 
 document.addEventListener("DOMContentLoaded", async () => {
-    // Fetch current level from backend
     let currentUserLevel = 1; // default fallback
+    let maxLevel = 3; // default fallback
+
     try {
-      const response = await fetch('/get_current_level');
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+      // Fetch the current user level as before...
+      const levelResponse = await fetch('/get_current_level');
+      if (levelResponse.ok) {
+        const levelData = await levelResponse.json();
+        currentUserLevel = parseInt(levelData.level);
       }
-      const data = await response.json();
-      currentUserLevel = parseInt(data.level);
       
+      // Fetch the configuration including max_level
+      const configResponse = await fetch('/config');
+      if (configResponse.ok) {
+        const configData = await configResponse.json();
+        maxLevel = parseInt(configData.max_level);
+      }
+
       // Fetch and display the initial prompt for the current level
       const promptResponse = await fetch(`/get_prompt?key=${currentUserLevel}`);
       if (promptResponse.ok) {
@@ -23,17 +31,15 @@ document.addEventListener("DOMContentLoaded", async () => {
     } catch (error) {
       console.warn("Failed to fetch current level:", error);
     }
-   
-     // Update progress bar based on currentUserLevel
-     const maxLevel = 3;
-     const progressPercentage = ((currentUserLevel - 1) / maxLevel) * 100;
-     const progressBarContainer = document.querySelector('.progress-bar-container');
-     const progressBar = document.querySelector('.progress-bar');
-     if (progressBar && progressBarContainer) {
-         progressBar.style.width = `${progressPercentage}%`;
-         progressBarContainer.setAttribute('data-text', `${currentUserLevel - 1}/${maxLevel}`);
-     }
 
+      // Now update the progress bar using maxLevel
+      const progressBarContainer = document.querySelector('.progress-bar-container');
+      const progressPercentage = ((currentUserLevel - 1) / maxLevel) * 100;
+      const progressBar = document.querySelector('.progress-bar');
+      if (progressBar && progressBarContainer) {
+          progressBar.style.width = `${progressPercentage}%`;
+          progressBarContainer.setAttribute('data-text', `${currentUserLevel - 1}/${maxLevel}`);
+      }
     
     // Define the pastel color palette for token visualizations.
     const defaultTokenColors = [
