@@ -27,10 +27,11 @@ document.addEventListener("DOMContentLoaded", async () => {
      // Update progress bar based on currentUserLevel
      const maxLevel = 3;
      const progressPercentage = ((currentUserLevel - 1) / maxLevel) * 100;
+     const progressBarContainer = document.querySelector('.progress-bar-container');
      const progressBar = document.querySelector('.progress-bar');
-     if (progressBar) {
+     if (progressBar && progressBarContainer) {
          progressBar.style.width = `${progressPercentage}%`;
-         progressBar.textContent = `${currentUserLevel - 1}/${maxLevel}`;
+         progressBarContainer.setAttribute('data-text', `${currentUserLevel - 1}/${maxLevel}`);
      }
 
     
