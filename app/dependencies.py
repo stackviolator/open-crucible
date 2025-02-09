@@ -33,3 +33,12 @@ def get_session(request: Request, response: Response):
         secure=os.getenv("DEBUG") == "False",  # Get from DEBUG env variable
     )
     return session_data
+
+def internal_only(request: Request):
+    """
+    Dependency that restricts access to internal endpoints.
+    Checks if the request originates from localhost.
+    """
+    client_host = request.client.host if request.client else None
+    if client_host not in ("127.0.0.1", "::1"):
+        raise HTTPException(status_code=403, detail="This endpoint is only accessible internally.")

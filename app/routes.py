@@ -10,7 +10,7 @@ from datetime import datetime
 from app.models import model, tokenizer, SYSTEM_PROMPTS, SYSTEM_PROMPT, load_model  # note the import of SYSTEM_PROMPTS
 from app.schemas import GenerationRequest, ChangeModelRequest
 from app.auth import create_access_token, ACCESS_TOKEN_EXPIRE_MINUTES, set_auth_cookie
-from app.dependencies import get_session
+from app.dependencies import get_session, internal_only
 import os
 
 router = APIRouter()
@@ -29,7 +29,34 @@ USER_ROLE = "<user>"
 USER_ROLE_END = "</user>"
 
 @router.post("/generate")
-def generate_text(request_data: GenerationRequest, request: Request, response: Response, session: dict = Depends(get_session)):
+def generate_text(
+    request_data: GenerationRequest,
+    request: Request,
+    response: Response,
+    session: dict = Depends(get_session)
+):
+    """
+    Generate text using the language model based on the user's prompt.
+    Checks for a valid JWT session and returns a 403 error if invalid or expired.
+    
+    Parameters:
+    - request_data: GenerationRequest schema containing the prompt and generation settings.
+    - request: FastAPI Request object.
+    - response: FastAPI Response object.
+    - session: User session obtained via JWT.
+    
+    Returns:
+    - A dictionary containing the generated text, tokens, and metadata.
+    """
+    # Validate JWT session: if the session is missing or does not contain a valid 'level', deny access.
+    if not session or "level" not in session:
+        raise HTTPException(status_code=403, detail="Invalid or expired JWT.")
+    
+    # Check if the requested level is greater than the session level.
+    if int(request_data.system_prompt_choice.split('-')[1]) > session.get("level", 0):
+        raise HTTPException(status_code=403, detail="You do not have access to this prompt.")
+    
+    # Limit maximum new tokens
     if request_data.max_new_tokens > 200:
         request_data.max_new_tokens = 200
 
@@ -43,6 +70,7 @@ def generate_text(request_data: GenerationRequest, request: Request, response: R
         f"Generation request from {client_ip} at {timestamp} with payload: {request_data.json()}"
     )
 
+    # Build the final prompt including system and user roles.
     final_prompt = (
         f"{BOS_TOKEN}"
         f"{SYSTEM_ROLE}{selected_system_prompt}{SYSTEM_ROLE_END}\n"
@@ -50,11 +78,13 @@ def generate_text(request_data: GenerationRequest, request: Request, response: R
         "<assistant>"
     )
 
+    # Tokenize the prompt for model input.
     prompt_inputs = tokenizer(final_prompt, return_tensors="pt", padding=True)
     input_ids = prompt_inputs["input_ids"].to(model.device)
     attention_mask = prompt_inputs["attention_mask"].to(model.device)
     prompt_len = input_ids.shape[1]
 
+    # Tokenize user prompt separately (e.g. for logging or additional processing).
     user_inputs = tokenizer(request_data.user_prompt, return_tensors="pt")
     user_token_ids = user_inputs["input_ids"][0]
     user_tokens = [tokenizer.decode([tid]) for tid in user_token_ids]
@@ -75,6 +105,7 @@ def generate_text(request_data: GenerationRequest, request: Request, response: R
     output_token_ids = generated_ids[0][prompt_len:]
     generated_text_only = tokenizer.decode(output_token_ids, skip_special_tokens=True)
     
+    # Remove any trailing text after the assistant tag.
     if "</assistant>" in generated_text_only:
         generated_text_only = generated_text_only.split("</assistant>")[0]
     
@@ -86,21 +117,25 @@ def generate_text(request_data: GenerationRequest, request: Request, response: R
     )
 
     # --- Server-side success checking ---
-    # Convert generated text to lowercase and check for both keywords.
+    # Check for a jailbreak attempt by looking for specific keywords.
     lower_text = generated_text_only.lower()
-    jailbreak_success = "one" in lower_text and "morbillion" in lower_text # TODO: Make this more robust
+    jailbreak_success = "one" in lower_text and "morbillion" in lower_text  # TODO: Make this more robust
 
-    # Extract level number from system_prompt_choice and compare with session level
+    # If jailbreak is successful and the prompt level is valid, increment the session level.
     try:
         prompt_level = int(request_data.system_prompt_choice.split('-')[1])
+        print(f"Prompt level: {prompt_level}")
+        print(f"Session level: {session.get('level', 0)}")
+        print(f"Jailbreak success: {jailbreak_success}")
+
         if jailbreak_success and prompt_level >= session.get("level", 0):
-            # Increment the level (or update as desired)
             session["level"] = session.get("level", 1) + 1
             # Update the session cookie so that the new level is persisted.
             set_auth_cookie(response, session)
+            print(f"Level updated to {session['level']}")
     except (AttributeError, IndexError, ValueError):
-        # Handle cases where system_prompt_choice is not in expected format
         logging.warning(f"Invalid system_prompt_choice format: {request_data.system_prompt_choice}")
+        print("I hath failed ")
 
     return {
         "system_prompt": session.get("level"),
@@ -113,17 +148,57 @@ def generate_text(request_data: GenerationRequest, request: Request, response: R
 
 @router.get("/get_prompt")
 def get_prompt(key: int, session: dict = Depends(get_session)):
-    # Check level of session, user can access all levels up to their current level
+    """
+    Retrieve the system prompt corresponding to the specified key.
+    Ensures the user has access to the prompt based on their session level.
+    If requested key exceeds maximum available level, returns highest level prompt.
+    
+    Parameters:
+    - key: The level key for the desired system prompt.
+    - session: User session obtained via JWT.
+    
+    Returns:
+    - A dictionary containing the prompt text if access is allowed.
+    
+    Raises:
+    - HTTPException (403) if the user does not have access to the requested prompt.
+    """
     level = session.get("level")
     if key > level:
-        # Return a 403 error
         raise HTTPException(status_code=403, detail="You do not have access to this prompt.")
 
-    prompt_text = SYSTEM_PROMPTS.get(f"level-{key}", "Prompt not found.")
+    # Get the maximum available level
+    max_level = max(int(k.split('-')[1]) for k in SYSTEM_PROMPTS.keys())
+    
+    # If requested key exceeds max level, use max level instead
+    actual_key = min(key, max_level)
+    
+    prompt_text = SYSTEM_PROMPTS.get(f"level-{actual_key}", "Prompt not found.")
     return {"prompt_text": prompt_text}
 
 @router.post("/change_model")
-def change_model(request_data: ChangeModelRequest, request: Request):
+def change_model(
+    request_data: ChangeModelRequest,
+    request: Request,
+    session: dict = Depends(get_session)
+):
+    """
+    Change the currently active language model based on the provided model UUID.
+    
+    Parameters:
+    - request_data: ChangeModelRequest schema containing the model UUID.
+    - request: FastAPI Request object.
+    - session: User session obtained via JWT.
+    
+    Returns:
+    - A dictionary indicating success or error and the new model name if successful.
+    
+    Raises:
+    - HTTPException (403) if the session is invalid.
+    """
+    if not session:
+        raise HTTPException(status_code=403, detail="Invalid session")
+
     client_ip = request.client.host if request.client else "unknown"
     timestamp = datetime.utcnow().isoformat()
 
@@ -131,7 +206,6 @@ def change_model(request_data: ChangeModelRequest, request: Request):
         f"Change model request from {client_ip} at {timestamp} with payload: {request_data.json()}"
     )
 
-    # Look up the model name from the UUID provided.
     model_uuid = request_data.model_uuid
     if model_uuid not in MODEL_MAP:
         error_msg = f"Invalid model UUID: {model_uuid}"
@@ -150,21 +224,78 @@ def change_model(request_data: ChangeModelRequest, request: Request):
     return {"status": "success", "model_name": model_name}
 
 @router.get("/", response_class=HTMLResponse)
-def root(request: Request):
-    # Pass the available system prompt options to the template so that the front end can render a toggle.
-    prompt_options = list(SYSTEM_PROMPTS.keys())
-    return templates.TemplateResponse("index.html", {"request": request, "system_prompt": SYSTEM_PROMPT, "prompt_options": prompt_options})
+def root(request: Request, response: Response, session: dict = Depends(get_session)):
+    """
+    Render the index page.
+    If the user's JWT is expired, invalid, or missing, initialize a new session.
+    
+    Parameters:
+    - request: FastAPI Request object.
+    - response: FastAPI Response object (used to set cookies).
+    - session: User session obtained via JWT.
+    
+    Returns:
+    - An HTML response rendering the index page with system prompt options.
+    """
+    # If the session does not have a 'level', initialize it and set the auth cookie.
+    if "level" not in session:
+        session["level"] = 1
+        set_auth_cookie(response, session)
 
-@router.post("/update_level")
-def update_level(new_level: int, request: Request, response: Response, session: dict = Depends(get_session)):
+    prompt_options = list(SYSTEM_PROMPTS.keys())
+    return templates.TemplateResponse("index.html", {
+        "request": request,
+        "system_prompt": SYSTEM_PROMPT,
+        "prompt_options": prompt_options
+    })
+
+@router.post("/update_level", dependencies=[Depends(internal_only)])
+def update_level(
+    new_level: int,
+    request: Request,
+    response: Response,
+    session: dict = Depends(get_session)
+):
+    """
+    Update the user's session level.
+    This endpoint is restricted to internal use only.
+    
+    Parameters:
+    - new_level: The new level to set in the session.
+    - request: FastAPI Request object.
+    - response: FastAPI Response object (used to update cookies).
+    - session: User session obtained via JWT.
+    
+    Returns:
+    - A dictionary with a success message and the updated session.
+    """
     session["level"] = new_level
     set_auth_cookie(response, session)
     return {"msg": "Level updated", "session": session}
 
 @router.get("/get_level")
 def get_level(request: Request, session: dict = Depends(get_session)):
+    """
+    Retrieve the user's current session level.
+    
+    Parameters:
+    - request: FastAPI Request object.
+    - session: User session obtained via JWT.
+    
+    Returns:
+    - A dictionary containing the user's session level.
+    """
     return {"level": session.get("level")}
 
 @router.get("/get_current_level")
 def get_current_level(session: dict = Depends(get_session)):
+    """
+    Retrieve the current session level, defaulting to 1 if not set.
+    
+    Parameters:
+    - session: User session obtained via JWT.
+    
+    Returns:
+    - A dictionary containing the current session level.
+    """
     return {"level": session.get("level", 1)}

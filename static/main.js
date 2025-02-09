@@ -26,11 +26,11 @@ document.addEventListener("DOMContentLoaded", async () => {
    
      // Update progress bar based on currentUserLevel
      const maxLevel = 3;
-     const progressPercentage = (currentUserLevel / maxLevel) * 100;
+     const progressPercentage = ((currentUserLevel - 1) / maxLevel) * 100;
      const progressBar = document.querySelector('.progress-bar');
      if (progressBar) {
          progressBar.style.width = `${progressPercentage}%`;
-         progressBar.textContent = `${currentUserLevel}/${maxLevel}`;
+         progressBar.textContent = `${currentUserLevel - 1}/${maxLevel}`;
      }
 
     
@@ -143,19 +143,21 @@ document.addEventListener("DOMContentLoaded", async () => {
       }
     });
   
-    // Main submit handler for text generation (unchanged).
+    // Main submit handler for text generation
     submitBtnElem.addEventListener("click", async () => {
       const userPrompt = document.getElementById("userPrompt").value;
       const maxTokens = parseInt(document.getElementById("maxTokens").value) || 100;
       const modelChoice = document.getElementById("modelChoice").value;
-  
+      const systemPromptChoice = document.getElementById("systemPromptChoice").value;
+
       showToast("Generating text...", "info");
       console.log("Submit button pressed. Calling /generate endpoint...");
-  
+
       const payload = {
         user_prompt: userPrompt,
         max_new_tokens: maxTokens,
-        model_choice: modelChoice
+        model_choice: modelChoice,
+        system_prompt_choice: `level-${systemPromptChoice}`
       };
   
       document.getElementById("displayCombinedPrompt").innerText = "";
