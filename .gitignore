@@ -51,3 +51,6 @@ app.log
 
 # Ignore TODO.md
 TODO.md
+
+# Ignore .env
+.env

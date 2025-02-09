@@ -55,10 +55,9 @@ document.addEventListener("DOMContentLoaded", () => {
     systemPromptChoiceElem.addEventListener("change", async (event) => {
         const selectedKey = event.target.value;
         // Show a toast that the system prompt is being updated.
-        showToast("Changing system prompt...", "info");
         try {
             // Make an HTTP GET request to the /get_prompt endpoint.
-            const response = await fetch(`/get_prompt?key=${encodeURIComponent(selectedKey)}`);
+            const response = await fetch(`/get_prompt?key=${selectedKey}`);
             if (!response.ok) {
                 throw new Error(`Server returned ${response.status}`);
             }
@@ -118,7 +117,6 @@ document.addEventListener("DOMContentLoaded", () => {
         // Get the values from input elements.
         const userPrompt = document.getElementById("userPrompt").value;
         const maxTokens = parseInt(document.getElementById("maxTokens").value) || 100;
-        const systemPromptChoice = document.getElementById("systemPromptChoice").value;
         const modelChoice = document.getElementById("modelChoice").value; // Correct element ID
 
         // Show a toast to indicate generation has started.
@@ -130,7 +128,6 @@ document.addEventListener("DOMContentLoaded", () => {
         const payload = {
             user_prompt: userPrompt,
             max_new_tokens: maxTokens,
-            system_prompt_choice: systemPromptChoice,
             model_choice: modelChoice
         };
 
@@ -185,7 +182,16 @@ document.addEventListener("DOMContentLoaded", () => {
             // Show success toast on generation complete.
             showToast("Text generated successfully!", "success");
 
-            checkForConfettiAndToast();
+            // If the jailbreak was successful, play a confetti animation and show a toast.
+            if (data.jailbreak_success) {
+                confetti({
+                    particleCount: 150,
+                    spread: 70,
+                    origin: { y: 0.6 }
+                });
+                showToast("another morbilly in the bank", "success");
+            }
+
         } catch (error) {
             console.error("Error during fetch:", error);
             document.getElementById("displayOutputText").innerText = "An error occurred: " + error;
@@ -193,21 +199,4 @@ document.addEventListener("DOMContentLoaded", () => {
             showToast("Error generating text", "error");
         }
     });
-
-    function checkForConfettiAndToast() {
-        const outputEl = document.getElementById('displayOutputText');
-        if (!outputEl) return;
-        const text = outputEl.innerText || "";
-        const lowerText = text.toLowerCase();
-        if (lowerText.includes("one") && lowerText.includes("morbillion")) {
-          // Trigger confetti effect using canvas-confetti
-          confetti({
-            particleCount: 150,
-            spread: 70,
-            origin: { y: 0.6 }
-          });
-          showToast("another morbilly in the bank", "success");
-        }
-      }
-
 });
