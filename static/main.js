@@ -46,24 +46,27 @@ document.addEventListener("DOMContentLoaded", async () => {
       }, 3000);
     }
     // --- End Toast Function Implementation ---
-  
-    // Un-grey level selections based on the user's level from the session.
+ 
+    // After fetching currentUserLevel and updating the progress bar:
     const levelSelect = document.getElementById("systemPromptChoice");
     if (levelSelect) {
-      for (let option of levelSelect.options) {
+    // Loop through options to enable/disable based on currentUserLevel.
+    for (let option of levelSelect.options) {
         const optionLevel = parseInt(option.value);
         if (optionLevel <= currentUserLevel) {
-          option.disabled = false;
-          option.textContent = option.textContent.replace(" 🔒", "");
+        option.disabled = false;
+        option.textContent = option.textContent.replace(" 🔒", "");
         } else {
-          option.disabled = true;
-          if (!option.textContent.includes("🔒")) {
+        option.disabled = true;
+        if (!option.textContent.includes("🔒")) {
             option.textContent += " 🔒";
-          }
         }
-      }
+        }
+    }
+    // Automatically select the option matching the current user's level.
+    levelSelect.value = currentUserLevel.toString();
     } else {
-      console.warn("levelSelect is missing.");
+    console.warn("levelSelect is missing.");
     }
   
     // Get references to other key DOM elements.
