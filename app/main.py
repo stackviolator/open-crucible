@@ -4,6 +4,12 @@ import logging
 from fastapi import FastAPI
 from app.routes import router
 from fastapi.staticfiles import StaticFiles
+from starlette.middleware.sessions import SessionMiddleware
+import os
+from app.middleware import add_middleware
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # Configure logging to output to both the console and a file ("app.log")
 logging.basicConfig(
@@ -15,7 +21,11 @@ logging.basicConfig(
     ]
 )
 
+SECRET_KEY = os.getenv("SESSION_SECRET_KEY")
+
 app = FastAPI()
+app.add_middleware(SessionMiddleware, secret_key=SECRET_KEY)
+add_middleware(app)
 
 # Mount the static directory for JS/CSS files
 app.mount("/static", StaticFiles(directory="static"), name="static")

@@ -9,159 +9,156 @@
   <link rel="stylesheet" href="/static/style.css" />
 </head>
 <body>
-    <!-- Top Bar -->
-    <div class="top-bar">
-        <div class="top-bar-left">
-            <!-- Hamburger Button to Toggle Sidebar -->
-            <button class="hamburger-btn" onclick="toggleSidebar()">☰</button>
-            <button class="btn-home" onclick="window.location.href='/';">
-                Open Crucible
-            </button>
-        </div>
-        <div class="top-bar-right">
-            <button class="btn-top" onclick="window.location.href='https://magic-box.dev';">
-                Magic Box Blog
-            </button>
-            <!-- Additional top bar buttons if needed -->
-        </div>
+  <!-- Top Bar -->
+  <div class="top-bar">
+    <div class="top-bar-left">
+      <!-- Hamburger Button to Toggle Sidebar -->
+      <button class="hamburger-btn" onclick="toggleSidebar()">☰</button>
+      <button class="btn-home" onclick="window.location.href='/';">
+        Open Crucible
+      </button>
     </div>
-    
-    <!-- Sidebar for Options with a Generic Dropdown -->
-    <div class="sidebar" id="sidebar">
-        <div class="dropdown">
-            <h2 class="dropdown-header" onclick="toggleDropdown()">
-                Options <span id="dropdownArrow">▼</span>
-            </h2>
-            <div class="dropdown-content" id="dropdownContent">
-                <section>
-                    <label for="modelChoice">Model Choice:</label>
-                    <select id="modelChoice" class="styled-input">
-                        <option value="de0b4c67-de5e-4bbf-82ec-6fffce8e1b83">Llama-3.1-8B (Default)</option>
-                        <option value="3cb9bc3f-05a8-4644-8b83-9d7010edf301">Llama-3.1-8B 4bit Quantized</option>
-                    </select>
-                </section>
-                <section>
-                    <label for="maxTokens">Max new tokens:</label>
-                    <input id="maxTokens" type="number" value="100" class="styled-input" />
-                </section>
-            </div>
-        </div>
+    <div class="top-bar-right">
+      <button class="btn-top" onclick="window.location.href='https://magic-box.dev';">
+        Magic Box Blog
+      </button>
+      <!-- Additional top bar buttons if needed -->
     </div>
+  </div>
 
-    <!-- Main container for content -->
-    <div class="container">
-        <h1>We ❤️ Open Crucible 😊</h1>
-
-        <!-- Levels Section -->
-        <section id="levelSelection">
-            <h2>Select Level</h2>
-            <select id="systemPromptChoice" class="styled-input">
-                <option value="1">Level 1</option>
-                <option value="2" disabled>Level 2 &#128274;</option>
-                <option value="3" disabled>Level 3 &#128274;</option>
-            </select>
-        </section>
-
-        <!-- Progress Bar Section -->
-        <section id="progressSection">
-            <h2>Progress</h2>
-            <div class="progress-bar-container" data-text="0/3">
-              <div class="progress-bar"></div>
-            </div>
-          </section>
-
-
+  <!-- Sidebar for Options with a Generic Dropdown -->
+  <div class="sidebar" id="sidebar">
+    <div class="dropdown">
+      <h2 class="dropdown-header" onclick="toggleDropdown()">
+        Options <span id="dropdownArrow">▼</span>
+      </h2>
+      <div class="dropdown-content" id="dropdownContent">
         <section>
-            <h2>System Prompt:</h2>
-            <div class="prompt-box">
-                <!-- Remove the hardcoded system_prompt -->
-                <!-- This will be populated by the level selection change handler in main.js -->
-            </div>
+          <label for="modelChoice">Model Choice:</label>
+          <select id="modelChoice" class="styled-input">
+            <option value="de0b4c67-de5e-4bbf-82ec-6fffce8e1b83">Llama-3.1-8B (Default)</option>
+            <option value="3cb9bc3f-05a8-4644-8b83-9d7010edf301">Llama-3.1-8B 4bit Quantized</option>
+          </select>
         </section>
-
         <section>
-            <h2>User Prompt:</h2>
-            <textarea id="userPrompt" rows="4" cols="70" class="styled-input" placeholder="Type your prompt here..."></textarea>
-            <br/><br/>
-            <button id="submitBtn" class="btn-submit">Submit</button>
+          <label for="maxTokens">Max new tokens:</label>
+          <input id="maxTokens" type="number" value="100" class="styled-input" />
         </section>
+      </div>
+    </div>
+  </div>
 
-        <div id="modelSpinner" class="spinner hidden">
-            <div class="loader"></div>
-        </div>
-        <div id="modelStatusMessage"></div>
+  <!-- Main container for content (only shown after login in a real app) -->
+  <div class="container" id="mainContent">
+    <h1>We ❤️ Open Crucible 😊</h1>
 
-        <div id="spinner" class="spinner hidden">
-            <div class="loader"></div>
-            <p>Generating text...</p>
-        </div>
+    <!-- Levels Section -->
+    <section id="levelSelection">
+      <h2>Select Level</h2>
+      <select id="systemPromptChoice" class="styled-input">
+        <option value="1">Level 1</option>
+        <option value="2" disabled>Level 2 &#128274;</option>
+        <option value="3" disabled>Level 3 &#128274;</option>
+      </select>
+    </section>
 
-        <hr />
+    <!-- Progress Bar Section -->
+    <section id="progressSection">
+      <h2>Progress</h2>
+      <div class="progress-bar-container" data-text="0/3">
+        <div class="progress-bar"></div>
+      </div>
+    </section>
 
-        <section>
-            <h2>Prompt Passed to Model:</h2>
-            <div id="displayCombinedPrompt" class="display-box"></div>
-        </section>
+    <section>
+      <h2>System Prompt:</h2>
+      <div class="prompt-box">
+        <!-- Populated by JavaScript -->
+      </div>
+    </section>
 
-        <section>
-            <h2>User Tokens:</h2>
-            <div id="userTokenDisplay" class="token-display"></div>
-        </section>
+    <section>
+      <h2>User Prompt:</h2>
+      <textarea id="userPrompt" rows="4" cols="70" class="styled-input" placeholder="Type your prompt here..."></textarea>
+      <br/><br/>
+      <button id="submitBtn" class="btn-submit">Submit</button>
+    </section>
 
-        <section>
-            <h2>Model Output:</h2>
-            <div id="displayOutputText" class="display-box"></div>
-        </section>
+    <div id="modelSpinner" class="spinner hidden">
+      <div class="loader"></div>
+    </div>
+    <div id="modelStatusMessage"></div>
 
-        <section>
-            <h2>Output Tokens:</h2>
-            <div id="outputTokenDisplay" class="token-display"></div>
-        </section>
+    <div id="spinner" class="spinner hidden">
+      <div class="loader"></div>
+      <p>Generating text...</p>
     </div>
 
-    <script src="/static/main.js"></script>
-    <script>
-        function toggleSidebar() {
-            document.getElementById('sidebar').classList.toggle('active');
-        }
-      
-        function toggleDropdown() {
-            const dropdownContent = document.getElementById('dropdownContent');
-            const arrow = document.getElementById('dropdownArrow');
-            dropdownContent.classList.toggle('active');
-            arrow.textContent = dropdownContent.classList.contains('active') ? '▲' : '▼';
-        }
-    </script>
+    <hr />
 
-    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
+    <section>
+      <h2>Prompt Passed to Model:</h2>
+      <div id="displayCombinedPrompt" class="display-box"></div>
+    </section>
 
-    <footer class="footer">
-        <div class="footer-links">
-            <a href="https://github.com/stackviolator/open-crucible" target="_blank">
-                <svg class="footer-icon" viewBox="0 0 16 16" fill="currentColor" width="16" height="16" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 
-                    0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52 
-                    -.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 
-                    0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82a7.65 7.65 0 012 0c1.53-1.03 2.2-.82 
-                    2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 
-                    0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"></path>
-                </svg>
-                GitHub
-            </a>
-            <a href="https://x.com/joshtmerrill" target="_blank">
-                <svg class="footer-icon" viewBox="0 0 24 24" fill="currentColor" width="16" height="16" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M23.954 4.569a10 10 0 01-2.825.775 4.932 4.932 0 002.163-2.723 
-                    9.864 9.864 0 01-3.127 1.184 4.916 4.916 0 00-8.384 4.482A13.944 13.944 0 011.671 3.149a4.822 
-                    4.822 0 001.523 6.573 4.903 4.903 0 01-2.229-.616c-.054 2.281 1.581 4.415 3.949 4.89a4.935 4.935 
-                    0 01-2.224.085 4.928 4.928 0 004.604 3.417A9.867 9.867 0 010 19.54a13.94 13.94 0 007.548 2.209c9.057 
-                    0 14.01-7.496 14.01-13.986 0-.21 0-.42-.015-.63A10.012 10.012 0 0024 4.59z"></path>
-                </svg>
-                Twitter
-            </a>
-        </div>
-        <div class="footer-note">
-            Made with ❤️ and 🤖 in Austin, Texas
-        </div>
-    </footer>
+    <section>
+      <h2>User Tokens:</h2>
+      <div id="userTokenDisplay" class="token-display"></div>
+    </section>
+
+    <section>
+      <h2>Model Output:</h2>
+      <div id="displayOutputText" class="display-box"></div>
+    </section>
+
+    <section>
+      <h2>Output Tokens:</h2>
+      <div id="outputTokenDisplay" class="token-display"></div>
+    </section>
+  </div>
+
+  <script src="/static/main.js"></script>
+  <script>
+    // Sidebar and Dropdown Toggling
+    function toggleSidebar() {
+      document.getElementById('sidebar').classList.toggle('active');
+    }
+  
+    function toggleDropdown() {
+      const dropdownContent = document.getElementById('dropdownContent');
+      const arrow = document.getElementById('dropdownArrow');
+      dropdownContent.classList.toggle('active');
+      arrow.textContent = dropdownContent.classList.contains('active') ? '▲' : '▼';
+    }
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
+  <footer class="footer">
+    <div class="footer-links">
+      <a href="https://github.com/stackviolator/open-crucible" target="_blank">
+        <svg class="footer-icon" viewBox="0 0 16 16" fill="currentColor" width="16" height="16" xmlns="http://www.w3.org/2000/svg">
+          <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 
+                  0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52 
+                  -.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 
+                  0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82a7.65 7.65 0 012 0c1.53-1.03 2.2-.82 
+                  2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 
+                  0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"></path>
+        </svg>
+        GitHub
+      </a>
+      <a href="https://x.com/joshtmerrill" target="_blank">
+        <svg class="footer-icon" viewBox="0 0 24 24" fill="currentColor" width="16" height="16" xmlns="http://www.w3.org/2000/svg">
+          <path d="M23.954 4.569a10 10 0 01-2.825.775 4.932 4.932 0 002.163-2.723 
+                  9.864 9.864 0 01-3.127 1.184 4.916 4.916 0 00-8.384 4.482A13.944 13.944 0 011.671 3.149a4.822 
+                  4.822 0 001.523 6.573 4.903 4.903 0 01-2.229-.616c-.054 2.281 1.581 4.415 3.949 4.89a4.935 4.935 
+                  0 01-2.224.085 4.928 4.928 0 004.604 3.417A9.867 9.867 0 010 19.54a13.94 13.94 0 007.548 2.209c9.057 
+                  0 14.01-7.496 14.01-13.986 0-.21 0-.42-.015-.63A10.012 10.012 0 0024 4.59z"></path>
+        </svg>
+        Twitter
+      </a>
+    </div>
+    <div class="footer-note">
+      Made with ❤️ and 🤖 in Austin, Texas
+    </div>
+  </footer>
 </body>
 </html>

@@ -1,11 +1,11 @@
 # app/auth.py
 
+import os
 import jwt
 from datetime import datetime, timedelta
-from fastapi import HTTPException, status
-import os
+from fastapi import HTTPException, status, Response
+from passlib.context import CryptContext
 from dotenv import load_dotenv
-from fastapi.responses import Response
 
 load_dotenv()
 
@@ -13,6 +13,14 @@ load_dotenv()
 SECRET_KEY = os.getenv("JWT_SECRET_KEY")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24  # e.g. token valid for 24 hours
+
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+def get_password_hash(password: str) -> str:
+    return pwd_context.hash(password)
+
+def verify_password(plain_password: str, hashed_password: str) -> bool:
+    return pwd_context.verify(plain_password, hashed_password)
 
 def create_access_token(data: dict, expires_delta: timedelta = None) -> str:
     to_encode = data.copy()
@@ -36,14 +44,13 @@ def verify_access_token(token: str) -> dict:
             detail="Could not validate token",
         )
 
-def set_auth_cookie(response: Response, session_data: dict) -> None:
-    """Sets or updates the JWT auth cookie"""
-    token = create_access_token(session_data)
+def set_auth_cookie(response: Response, token_data: dict):
+    access_token = create_access_token(token_data)
     response.set_cookie(
         key="access_token",
-        value=token,
+        value=access_token,
         httponly=True,
-        max_age=ACCESS_TOKEN_EXPIRE_MINUTES * 60,
+        secure=os.getenv("DEBUG") == "False",
         samesite="lax",
-        secure=os.getenv("DEBUG") == "False"
+        max_age=ACCESS_TOKEN_EXPIRE_MINUTES * 60
     )

@@ -1,17 +1,25 @@
 # app/routes.py
 
 from fastapi import Request, Response, Depends, APIRouter, HTTPException
-from fastapi.responses import HTMLResponse
-import torch
+from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
-import logging
-from datetime import datetime
+from sqlalchemy import create_engine, Column, Integer, String
+from sqlalchemy.orm import sessionmaker, declarative_base, Session
 
 from app.models import model, tokenizer, SYSTEM_PROMPTS, SYSTEM_PROMPT, load_model  # note the import of SYSTEM_PROMPTS
-from app.schemas import GenerationRequest, ChangeModelRequest
-from app.auth import create_access_token, ACCESS_TOKEN_EXPIRE_MINUTES, set_auth_cookie
+from app.schemas import GenerationRequest, ChangeModelRequest, RegisterRequest, LoginRequest
+from app.auth import create_access_token, ACCESS_TOKEN_EXPIRE_MINUTES, set_auth_cookie, verify_password, get_password_hash
 from app.dependencies import get_session, internal_only
+from app.db import engine, SessionLocal
+from app.user_models import Base, User
+
+from authlib.integrations.starlette_client import OAuth, OAuthError
+from passlib.context import CryptContext
+
 import os
+import logging
+import torch
+from datetime import datetime
 
 router = APIRouter()
 templates = Jinja2Templates(directory="templates")
@@ -28,16 +36,33 @@ SYSTEM_ROLE_END = "</system>"
 USER_ROLE = "<user>"
 USER_ROLE_END = "</user>"
 
+# --- Database Setup ---
+# (Using SQLite here; change DATABASE_URL as needed)
+DATABASE_URL = "sqlite:///./users.db"
+engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
+SessionLocal = sessionmaker(bind=engine, autoflush=False, autocommit=False)
+# Create the users table if it doesn't exist.
+Base.metadata.create_all(bind=engine)
+print("Tables created:", Base.metadata.tables.keys())
+
+# Dependency to get a database session.
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+
 @router.post("/generate")
 def generate_text(
     request_data: GenerationRequest,
     request: Request,
     response: Response,
-    session: dict = Depends(get_session)
+    session: dict = Depends(get_session),
+    db: Session = Depends(get_db)
 ):
     """
     Generate text using the language model based on the user's prompt.
-    Checks for a valid JWT session and returns a 403 error if invalid or expired.
     
     Parameters:
     - request_data: GenerationRequest schema containing the prompt and generation settings.
@@ -48,12 +73,8 @@ def generate_text(
     Returns:
     - A dictionary containing the generated text, tokens, and metadata.
     """
-    # Validate JWT session: if the session is missing or does not contain a valid 'level', deny access.
-    if not session or "level" not in session:
-        raise HTTPException(status_code=403, detail="Invalid or expired JWT.")
-    
     # Check if the requested level is greater than the session level.
-    if int(request_data.system_prompt_choice.split('-')[1]) > session.get("level", 0):
+    if int(request_data.system_prompt_choice.split('-')[1]) > session.get("highest_level", 0):
         raise HTTPException(status_code=403, detail="You do not have access to this prompt.")
     
     # Limit maximum new tokens
@@ -128,17 +149,27 @@ def generate_text(
         print(f"Session level: {session.get('level', 0)}")
         print(f"Jailbreak success: {jailbreak_success}")
 
-        if jailbreak_success and prompt_level >= session.get("level", 0):
-            session["level"] = session.get("level", 1) + 1
-            # Update the session cookie so that the new level is persisted.
-            set_auth_cookie(response, session)
-            print(f"Level updated to {session['level']}")
-    except (AttributeError, IndexError, ValueError):
-        logging.warning(f"Invalid system_prompt_choice format: {request_data.system_prompt_choice}")
-        print("I hath failed ")
+        if jailbreak_success and prompt_level >= session.get("highest_level", 0):
+            new_level = session.get("highest_level", 1) + 1
+            
+            # Update the database with the new level
+            user = db.query(User).filter(User.username == session["sub"]).first()
+            if user:
+                user.highest_level = new_level
+                db.commit()
+                
+                # Create new token data and update session
+                token_data = {"sub": user.username, "highest_level": new_level}
+                session.update(token_data)
+                
+                # Set new auth cookie with updated token
+                set_auth_cookie(response, token_data)
+                
+    except (AttributeError, IndexError, ValueError) as e:
+        logging.warning(f"Error processing level update: {str(e)}. system_prompt_choice: {request_data.system_prompt_choice}, session: {session}")
 
     return {
-        "system_prompt": session.get("level"),
+        "system_prompt": session.get("highest_level"),
         "combined_prompt": final_prompt,
         "user_tokens": user_tokens,
         "generated_text_only": generated_text_only,
@@ -163,7 +194,7 @@ def get_prompt(key: int, session: dict = Depends(get_session)):
     Raises:
     - HTTPException (403) if the user does not have access to the requested prompt.
     """
-    level = session.get("level")
+    level = session.get("highest_level")
     if key > level:
         raise HTTPException(status_code=403, detail="You do not have access to this prompt.")
 
@@ -223,25 +254,19 @@ def change_model(
     logging.info(f"Model changed successfully to {model_name}")
     return {"status": "success", "model_name": model_name}
 
-@router.get("/", response_class=HTMLResponse)
-def root(request: Request, response: Response, session: dict = Depends(get_session)):
+@router.get("/")
+async def root(request: Request):
     """
-    Render the index page.
-    If the user's JWT is expired, invalid, or missing, initialize a new session.
-    
-    Parameters:
-    - request: FastAPI Request object.
-    - response: FastAPI Response object (used to set cookies).
-    - session: User session obtained via JWT.
-    
-    Returns:
-    - An HTML response rendering the index page with system prompt options.
+    Root endpoint that redirects to dashboard if authenticated,
+    otherwise redirects to login page.
     """
-    # If the session does not have a 'level', initialize it and set the auth cookie.
-    if "level" not in session:
-        session["level"] = 1
-        set_auth_cookie(response, session)
+    if not request.cookies.get("access_token"):
+        return RedirectResponse(url="/login", status_code=303)
+    return RedirectResponse(url="/dashboard", status_code=303)
 
+@router.get("/dashboard", response_class=HTMLResponse)
+def dashboard(request: Request, response: Response, session: dict = Depends(get_session)):
+    """Render the dashboard page (formerly root page)."""
     prompt_options = list(SYSTEM_PROMPTS.keys())
     return templates.TemplateResponse("index.html", {
         "request": request,
@@ -285,7 +310,7 @@ def get_level(request: Request, session: dict = Depends(get_session)):
     Returns:
     - A dictionary containing the user's session level.
     """
-    return {"level": session.get("level")}
+    return {"level": session.get("highest_level")}
 
 @router.get("/get_current_level")
 def get_current_level(session: dict = Depends(get_session)):
@@ -298,7 +323,7 @@ def get_current_level(session: dict = Depends(get_session)):
     Returns:
     - A dictionary containing the current session level.
     """
-    return {"level": session.get("level", 1)}
+    return {"level": session.get("highest_level", 1)}
 
 @router.get("/config")
 def get_config(session: dict = Depends(get_session)):
@@ -310,7 +335,7 @@ def get_config(session: dict = Depends(get_session)):
     - session: User session obtained via JWT.
     
     Returns:
-    - Dictionary containing max_level, current_model, and model_options
+    - Dictionary containing max_level and current_model
     
     Raises:
     - HTTPException (403) if the session is invalid.
@@ -329,3 +354,110 @@ def get_config(session: dict = Depends(get_session)):
         "current_model": current_model,
     }
 
+## Auth Routes ##
+# --- Configure OAuth for GitHub ---
+oauth = OAuth()
+oauth.register(
+    name="github",
+    client_id=os.getenv("GITHUB_CLIENT_ID"),
+    client_secret=os.getenv("GITHUB_CLIENT_SECRET"),
+    access_token_url="https://github.com/login/oauth/access_token",
+    authorize_url="https://github.com/login/oauth/authorize",
+    api_base_url="https://api.github.com/",
+    client_kwargs={"scope": "user:email"},
+)
+
+# --- Native Registration Endpoint ---
+@router.post("/register")
+def register_user(user: RegisterRequest, db: Session = Depends(get_db)):
+    """
+    Register a new user with a username and password.
+    The database stores the username, a hashed password, and sets the highest_level to 1.
+    """
+    existing_user = db.query(User).filter(User.username == user.username).first()
+    if existing_user:
+        raise HTTPException(status_code=400, detail="Username already registered")
+    hashed_password = get_password_hash(user.password)
+    new_user = User(username=user.username, password_hash=hashed_password, highest_level=1)
+    db.add(new_user)
+    db.commit()
+    db.refresh(new_user)
+    return {"message": "User registered successfully."}
+
+# --- Native Login Endpoint ---
+@router.post("/login/native")
+def login_native(user: LoginRequest, response: Response, db: Session = Depends(get_db)):
+    """
+    Login using native credentials.
+    Verifies the username and password, then issues a JWT token (using your existing JWT functions)
+    and sets it as an auth cookie.
+    """
+    existing_user = db.query(User).filter(User.username == user.username).first()
+    if not existing_user or not existing_user.password_hash:
+        raise HTTPException(status_code=401, detail="Invalid credentials")
+    if not verify_password(user.password, existing_user.password_hash):
+        raise HTTPException(status_code=401, detail="Invalid credentials")
+    
+    # Use token data directly instead of creating jwt_token first.
+    token_data = {"sub": existing_user.username, "highest_level": existing_user.highest_level}
+    set_auth_cookie(response, token_data)
+    
+    # Optionally, return the token in the response if needed.
+    return {"access_token": create_access_token(token_data)}
+
+# --- GitHub OAuth Login Endpoints ---
+@router.get("/login/github")
+async def login_github(request: Request):
+    """
+    Initiate the GitHub OAuth login flow.
+    Redirects the user to GitHub's authorization page.
+    """
+    redirect_uri = request.url_for("auth_github")
+    return await oauth.github.authorize_redirect(request, redirect_uri)
+
+@router.get("/auth/github")
+async def auth_github(request: Request, response: Response, db: Session = Depends(get_db)):
+    """
+    GitHub OAuth callback endpoint.
+    On successful authentication, retrieves the GitHub user info,
+    checks (or creates) the corresponding user record in the database,
+    issues a JWT token, and sets the auth cookie.
+    """
+    try:
+        token = await oauth.github.authorize_access_token(request)
+    except OAuthError:
+        raise HTTPException(status_code=400, detail="OAuth authentication failed")
+    
+    user_data_resp = await oauth.github.get("user", token=token)
+    user_data = user_data_resp.json()
+    github_id = str(user_data.get("id"))
+    github_username = user_data.get("login")
+    
+    # Look for an existing user record with this GitHub OAuth info.
+    user = db.query(User).filter(User.oauth_provider == "github", User.oauth_id == github_id).first()
+    if not user:
+        # Create a new user record for first-time GitHub logins.
+        user = User(
+            username=github_username,
+            highest_level=1,
+            oauth_provider="github",
+            oauth_id=github_id
+        )
+        db.add(user)
+        db.commit()
+        db.refresh(user)
+    
+    # Create redirect response first
+    redirect = RedirectResponse(url="/")
+    
+    # Set the cookie on the redirect response
+    token_data = {"sub": user.username, "highest_level": user.highest_level}
+    set_auth_cookie(redirect, token_data)
+    return redirect
+
+@router.get("/login", response_class=HTMLResponse)
+async def login_page(request: Request):
+    """Render the login page."""
+    return templates.TemplateResponse("login.html", {
+        "request": request
+    })

@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>Login - Open Crucible</title>
+    <link rel="icon" href="/static/favicon.ico" type="image/x-icon" />
+    <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+    <div class="container">
+        <h1>Login to Open Crucible</h1>
+        
+        <!-- GitHub Login Button -->
+        <div class="auth-buttons">
+            <button class="btn-submit" onclick="window.location.href='/login/github'">
+                Login with GitHub
+            </button>
+        </div>
+
+        <!-- Native Login Form -->
+        <div id="loginForm">
+            <form id="nativeLoginForm">
+                <label for="username" class="styled-label">Username</label>
+                <input type="text" id="username" class="styled-input" required />
+                <label for="password" class="styled-label">Password</label>
+                <input type="password" id="password" class="styled-input" required />
+                <button type="submit" class="btn-submit">Login</button>
+            </form>
+            <p>Don't have an account? <a href="#" onclick="toggleAuth()">Register here</a></p>
+        </div>
+
+        <!-- Native Registration Form (hidden by default) -->
+        <div id="registerForm" class="hidden">
+            <form id="nativeRegisterForm">
+                <label for="regUsername" class="styled-label">Username</label>
+                <input type="text" id="regUsername" class="styled-input" required />
+                <label for="regPassword" class="styled-label">Password</label>
+                <input type="password" id="regPassword" class="styled-input" required />
+                <button type="submit" class="btn-submit">Register</button>
+            </form>
+            <p>Already have an account? <a href="#" onclick="toggleAuth()">Login here</a></p>
+        </div>
+    </div>
+
+    <script>
+        // Toggle between login and registration forms
+        function toggleAuth() {
+            const loginForm = document.getElementById('loginForm');
+            const registerForm = document.getElementById('registerForm');
+            if (loginForm.classList.contains('hidden')) {
+                loginForm.classList.remove('hidden');
+                registerForm.classList.add('hidden');
+            } else {
+                loginForm.classList.add('hidden');
+                registerForm.classList.remove('hidden');
+            }
+        }
+
+        // Handle native login form submission
+        document.getElementById('nativeLoginForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const response = await fetch('/login_native', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, password })
+            });
+            if (response.ok) {
+                window.location.href = '/';
+            } else {
+                alert('Login failed. Please check your credentials.');
+            }
+        });
+
+        // Handle native registration form submission
+        document.getElementById('nativeRegisterForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const username = document.getElementById('regUsername').value;
+            const password = document.getElementById('regPassword').value;
+            const response = await fetch('/register', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, password })
+            });
+            if (response.ok) {
+                alert('Registration successful! Please login.');
+                toggleAuth();
+            } else {
+                alert('Registration failed. The username may already be taken.');
+            }
+        });
+    </script>
+</body>
+</html> 

@@ -9,3 +9,11 @@ class GenerationRequest(BaseModel):
 
 class ChangeModelRequest(BaseModel):
     model_uuid: str
+
+class RegisterRequest(BaseModel):
+    username: str
+    password: str
+
+class LoginRequest(BaseModel):
+    username: str
+    password: str

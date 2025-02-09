@@ -54,3 +54,7 @@ TODO.md
 
 # Ignore .env
 .env
+
+# Ignore database files
+users.db
+*.db
