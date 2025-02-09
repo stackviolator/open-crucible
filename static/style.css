@@ -1,12 +1,17 @@
 /* static/style.css */
 
+:root {
+    --top-bar-height: 80px;
+    --footer-height: 60px;
+}
+
 /* Top Bar Styles */
 .top-bar {
     position: fixed;
     top: 0;
     left: 0;
     right: 0;
-    height: 80px;  /* Adjusted height */
+    height: var(--top-bar-height);
     background-color: rgba(28, 28, 28, 0.8);
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
@@ -67,24 +72,33 @@
   }
 
   /* Sidebar Styles (unchanged except for dropdown naming) */
-.sidebar {
+  .sidebar {
     position: fixed;
-    top: 80px; /* Below the top bar */
+    top: var(--top-bar-height);
     left: 0;
-    transform: translateX(-100%);  /* Fully hidden off-canvas */
+    transform: translateX(-100%);
     width: 250px;
-    height: calc(100% - 80px);
+    height: calc(100vh - var(--top-bar-height) - var(--footer-height));
     background-color: #2a2a2a;
     padding: 20px;
     box-shadow: 2px 0 5px rgba(0, 0, 0, 0.3);
-    overflow-y: auto;
     transition: transform 0.3s ease;
-    z-index: 900;
-  }
+    z-index: 1100; /* Increased from 900 to 1100 */
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
 
-  .sidebar.active {
+
+.dropdown {
+    flex: 1;
+    overflow-y: auto;
+    margin-bottom: 20px;
+}
+
+.sidebar.active {
     transform: translateX(0);
-  }
+}
   
   /* Generic Dropdown Styles */
   .dropdown .dropdown-header {
@@ -287,7 +301,7 @@
     bottom: 0;
     left: 0;
     right: 0;
-    height: 60px; /* Adjust height as needed */
+    height: var(--footer-height);
     background-color: rgba(28, 28, 28, 0.8);
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
@@ -409,4 +423,44 @@
 /* For disabled options within the dropdown, if any default styling needs tweaking */
 .styled-input option:disabled {
   color: #999;
+}
+
+.logout-btn {
+    width: 100%;
+    background-color: #dc3545;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    margin-top: 10px;
+}
+
+.logout-btn:hover {
+    background-color: #c82333;
+}
+
+.sidebar-footer {
+    position: relative;
+    padding: 20px;
+    margin: 0 -20px -20px -20px;
+    background-color: #2a2a2a;
+    border-top: 1px solid #444;
+}
+
+.logout-btn {
+    width: 100%;
+    background-color: #dc3545;
+    color: white;
+    border: none;
+    padding: 12px 16px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: bold;
+}
+
+.logout-btn:hover {
+    background-color: #c82333;
 }

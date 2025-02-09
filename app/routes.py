@@ -461,3 +461,19 @@ async def login_page(request: Request):
     return templates.TemplateResponse("login.html", {
         "request": request
     })
+
+@router.post("/logout")
+async def logout(response: Response):
+    """
+    Logout endpoint that invalidates the current session
+    by clearing the access token cookie.
+    """
+    response = RedirectResponse(url="/login", status_code=303)
+    response.delete_cookie(
+        key="access_token",
+        path="/",
+        secure=True,  # Set to False if not using HTTPS in development
+        httponly=True,
+        samesite="lax"
+    )
+    return response

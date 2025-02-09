@@ -46,6 +46,13 @@
         </section>
       </div>
     </div>
+    
+    <!-- Add the logout button at the bottom of the sidebar -->
+    <div class="sidebar-footer">
+      <button onclick="logout()" class="logout-btn">
+        Logout
+      </button>
+    </div>
   </div>
 
   <!-- Main container for content (only shown after login in a real app) -->
@@ -130,6 +137,60 @@
       dropdownContent.classList.toggle('active');
       arrow.textContent = dropdownContent.classList.contains('active') ? '▲' : '▼';
     }
+  
+    // Toggle between native login and registration forms
+    function toggleAuth() {
+      const loginForm = document.getElementById('loginForm');
+      const registerForm = document.getElementById('registerForm');
+      const authTitle = document.getElementById('authTitle');
+      if (loginForm.classList.contains('hidden')) {
+        loginForm.classList.remove('hidden');
+        registerForm.classList.add('hidden');
+        authTitle.textContent = 'Login';
+      } else {
+        loginForm.classList.add('hidden');
+        registerForm.classList.remove('hidden');
+        authTitle.textContent = 'Register';
+      }
+    }
+  
+    // Handle native login form submission
+    document.getElementById('nativeLoginForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      const username = document.getElementById('username').value;
+      const password = document.getElementById('password').value;
+      const response = await fetch('/login/native', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password })
+      });
+      if (response.ok) {
+        // On success, you might hide the auth component and show main content
+        document.getElementById('authContainer').classList.add('hidden');
+        document.getElementById('mainContent').classList.remove('hidden');
+        window.location.reload(); // or update the UI as needed
+      } else {
+        alert('Login failed. Please check your credentials.');
+      }
+    });
+  
+    // Handle native registration form submission
+    document.getElementById('nativeRegisterForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      const username = document.getElementById('regUsername').value;
+      const password = document.getElementById('regPassword').value;
+      const response = await fetch('/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password })
+      });
+      if (response.ok) {
+        alert('Registration successful! Please login.');
+        toggleAuth();
+      } else {
+        alert('Registration failed. The username may already be taken.');
+      }
+    });
   </script>
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
   <footer class="footer">

@@ -6,7 +6,7 @@ from app.dependencies import get_session
 class AuthMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
         # Paths that don't require authentication
-        public_paths = {"/", "/login", "/login/github", "/auth/github", "/register", "/login_native", "/static"}
+        public_paths = {"/", "/login", "/login/github", "/auth/github", "/register", "/login/native", "/static"}
         
         # Check if the path is public
         if any(request.url.path.startswith(path) for path in public_paths):
