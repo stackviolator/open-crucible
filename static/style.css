@@ -361,3 +361,38 @@
 #levelSelection h2 {
   margin-bottom: 10px;
 }
+
+/* Custom Dropdown Styling for .styled-input */
+.styled-input {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-color: #333;       /* Dark background */
+  color: #fff;                  /* White text */
+  border: 1px solid #555;
+  border-radius: 8px;
+  padding: 12px 20px 12px 15px;  /* Extra space on the right for the arrow */
+  font-size: 1rem;
+  transition: background-color 0.3s ease, border-color 0.3s ease;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 140 140' xmlns='http://www.w3.org/2000/svg'%3E%3Cpolygon points='70,90 30,50 110,50' fill='%23ccc'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 15px center;
+  background-size: 12px;
+}
+
+/* Hover and Focus Effects */
+.styled-input:hover {
+  background-color: #444;
+  border-color: #666;
+}
+
+.styled-input:focus {
+  outline: none;
+  border-color: #66bb6a;
+  background-color: #444;
+}
+
+/* For disabled options within the dropdown, if any default styling needs tweaking */
+.styled-input option:disabled {
+  color: #999;
+}
