@@ -44,7 +44,6 @@
                     <label for="maxTokens">Max new tokens:</label>
                     <input id="maxTokens" type="number" value="100" class="styled-input" />
                 </section>
-                <!-- Removed system prompt (levels) selection from sidebar -->
             </div>
         </div>
     </div>
@@ -74,7 +73,8 @@
         <section>
             <h2>System Prompt:</h2>
             <div class="prompt-box">
-                {{ system_prompt }}
+                <!-- Remove the hardcoded system_prompt -->
+                <!-- This will be populated by the level selection change handler in main.js -->
             </div>
         </section>
 

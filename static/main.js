@@ -10,6 +10,16 @@ document.addEventListener("DOMContentLoaded", async () => {
       }
       const data = await response.json();
       currentUserLevel = parseInt(data.level);
+      
+      // Fetch and display the initial prompt for the current level
+      const promptResponse = await fetch(`/get_prompt?key=${currentUserLevel}`);
+      if (promptResponse.ok) {
+        const promptData = await promptResponse.json();
+        const promptDisplayElement = document.querySelector(".prompt-box");
+        if (promptDisplayElement) {
+          promptDisplayElement.innerText = promptData.prompt_text;
+        }
+      }
     } catch (error) {
       console.warn("Failed to fetch current level:", error);
     }
