@@ -9,7 +9,7 @@ from sqlalchemy.orm import sessionmaker, declarative_base, Session
 from app.models import model, tokenizer, SYSTEM_PROMPTS, SYSTEM_PROMPT, load_model  # note the import of SYSTEM_PROMPTS
 from app.schemas import GenerationRequest, ChangeModelRequest, RegisterRequest, LoginRequest, UpdateLevelRequest
 from app.auth import create_access_token, ACCESS_TOKEN_EXPIRE_MINUTES, set_auth_cookie, verify_password, get_password_hash
-from app.dependencies import get_session, internal_only
+from app.dependencies import get_session
 from app.db import engine, SessionLocal
 from app.user_models import Base, User
 
@@ -292,7 +292,7 @@ def change_model(
     logging.info(f"Model changed successfully to {model_name}")
     return {"status": "success", "model_name": model_name}
 
-@router.get("/chat_history", dependencies=[Depends(internal_only)])
+@router.get("/chat_history")
 def get_chat_history(
     session: dict = Depends(get_session),
     db: Session = Depends(get_db)
@@ -348,7 +348,7 @@ def dashboard(request: Request, response: Response, session: dict = Depends(get_
         "prompt_options": prompt_options
     })
 
-@router.post("/update_level", dependencies=[Depends(internal_only)])
+@router.post("/update_level")
 def update_level(
     update: UpdateLevelRequest,
     request: Request,
@@ -356,18 +356,19 @@ def update_level(
     session: dict = Depends(get_session)
 ):
     new_level = update.new_level
+    highest_level = session.get("highest_level", 1)
 
-    # Update highest_level if the new level is greater than what was previously cleared.
-    if new_level > session.get("highest_level", 1):
-        session["highest_level"] = new_level
+    # Only allow updating to levels equal to or below the highest level
+    if new_level > highest_level:
+        raise HTTPException(status_code=403, detail="Cannot set level higher than your current maximum level")
 
-    # Set current_level to the selected level (even if it's lower than highest_level).
+    # Set current_level to the selected level
     session["current_level"] = new_level
 
-    # Reset conversation by creating a new conversation_id.
+    # Reset conversation by creating a new conversation_id
     session["conversation_id"] = str(uuid.uuid4())
 
-    # Update the JWT cookie with the new session data.
+    # Update the JWT cookie with the new session data
     set_auth_cookie(response, session)
     return {"msg": "Level updated", "session": session}
 
