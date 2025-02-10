@@ -12,7 +12,7 @@
     left: 0;
     right: 0;
     height: var(--top-bar-height);
-    background-color: rgba(28, 28, 28, 0.8);
+    background: linear-gradient(to left, rgba(40, 40, 40, 0.8), rgba(63, 39, 63, 0.8));
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
     z-index: 1000;
@@ -302,7 +302,7 @@
     left: 0;
     right: 0;
     height: var(--footer-height);
-    background-color: rgba(28, 28, 28, 0.8);
+    background: linear-gradient(to right, rgba(40, 40, 40, 0.8), rgba(21, 61, 88, 0.8));
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
     display: flex;
