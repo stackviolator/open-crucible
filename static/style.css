@@ -1,5 +1,10 @@
 /* static/style.css */
 
+/* Ensure the root elements cover the full viewport height */
+html, body {
+  height: 100%;
+}
+
 :root {
   --top-bar-height: 80px;
   --footer-height: 60px;
@@ -7,7 +12,6 @@
 
 body {
   position: relative;
-  overflow: hidden;
   background: #1c1c1c;
   font-family: Arial, sans-serif;
   margin: 0;
@@ -18,9 +22,6 @@ body {
 /* ---------------------------------------------------------------- */
 /* Pseudo-elements for Animated Floating Shapes */
 /* ---------------------------------------------------------------- */
-/* These elements now render as 400×400px rounded squares (border-radius: 20px)
-   with a slightly increased opacity (0.8) and use your gradient overlays.
-*/
 body::before,
 body::after {
   content: "";
@@ -143,10 +144,10 @@ body::after {
 .sidebar {
   position: fixed;
   top: var(--top-bar-height);
+  bottom: 0;  /* Ensures the sidebar reaches the bottom of the viewport */
   left: 0;
   transform: translateX(-100%);
   width: 250px;
-  height: calc(100vh - var(--top-bar-height) - var(--footer-height));
   background-color: #2a2a2a;
   padding: 20px;
   box-shadow: 2px 0 5px rgba(0, 0, 0, 0.3);
@@ -154,7 +155,7 @@ body::after {
   z-index: 1100;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
+  overflow-y: auto;
 }
 
 .dropdown {
@@ -213,12 +214,18 @@ body::after {
 /* ---------------------------------------------------------------- */
 .container {
   max-width: 800px;
-  margin: 100px auto 0 auto;
+  /* Top margin to clear the top bar; bottom margin is reduced because extra
+     padding is applied to the container content */
+  margin: calc(var(--top-bar-height) + 20px) auto 20px auto;
   background: #2a2a2a;
   padding: 20px;
+  /* Extra bottom padding ensures that output tokens and other content are not hidden behind the footer */
+  padding-bottom: calc(20px + var(--footer-height));
   border-radius: 8px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
   color: #ddd;
+  /* Minimum height calculation remains to help with layout on taller viewports */
+  min-height: calc(100vh - var(--top-bar-height) - var(--footer-height) - 40px);
 }
 
 /* ---------------------------------------------------------------- */
@@ -359,6 +366,9 @@ h1, h2 {
   transform: translateX(-50%) translateY(20px);
 }
 
+/* ---------------------------------------------------------------- */
+/* Footer */
+/* ---------------------------------------------------------------- */
 .footer {
   position: fixed;
   bottom: 0;
@@ -506,7 +516,8 @@ h1, h2 {
 }
 
 .sidebar-footer {
-  position: relative;
+  position: sticky;
+  bottom: 0;
   padding: 20px;
   margin: 0 -20px -20px -20px;
   background-color: #2a2a2a;
