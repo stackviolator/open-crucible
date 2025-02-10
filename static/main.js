@@ -333,3 +333,27 @@ async function loadChatHistory() {
       console.error('Error loading chat history:', error);
   }
 }
+
+async function handleRegistration(formData) {
+    try {
+        const response = await fetch('/register', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(Object.fromEntries(formData))
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+            window.location.href = '/login';
+        } else {
+            // Show specific error message from the server
+            showToast(data.error || 'Registration failed', 'error');
+        }
+    } catch (error) {
+        console.error('Error during registration:', error);
+        showToast('Registration failed. Please try again.', 'error');
+    }
+}

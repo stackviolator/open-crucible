@@ -1,5 +1,12 @@
 # app/routes.py
 
+import os
+import re
+import uuid
+import logging
+from datetime import datetime
+
+import torch
 from fastapi import Request, Response, Depends, APIRouter, HTTPException
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
@@ -16,12 +23,7 @@ from app.user_models import Base, User
 from authlib.integrations.starlette_client import OAuth, OAuthError
 from passlib.context import CryptContext
 
-from datetime import datetime
-import os
-import logging
-import torch
-import uuid
-
+# Create the router and template objects
 router = APIRouter()
 templates = Jinja2Templates(directory="templates")
 
@@ -40,7 +42,6 @@ USER_ROLE_END = "</user>"
 ASSISTANT_ROLE = "<assistant>"
 ASSISTANT_ROLE_END = "</assistant>"
 
-# Add at the top of the file with other imports
 DEBUG_MODE = os.getenv("DEBUG", "false").lower() == "true"
 
 def strip_special_tokens(text: str) -> str:
@@ -49,7 +50,6 @@ def strip_special_tokens(text: str) -> str:
     for token in tokens:
         text = text.replace(token, "")
     return text.strip()
-
 
 # --- New ChatHistory Model ---
 class ChatHistory(Base):
@@ -60,7 +60,6 @@ class ChatHistory(Base):
     user_prompt = Column(String)       # Will store the user prompt or system prompt (with tokens)
     assistant_reply = Column(String)   # Will store the assistant reply (with tokens)
     timestamp = Column(String)         # stored as ISO string
-
 
 # Create the tables if they don't exist.
 Base.metadata.create_all(bind=engine)
@@ -74,7 +73,30 @@ def get_db():
     finally:
         db.close()
 
-# --- Generate Text ---
+# -----------------------------
+# Password Validation Function
+# -----------------------------
+def validate_password(password: str):
+    """
+    Validates the password against a set of rules:
+      - Minimum length of 8 characters.
+      - Contains at least one uppercase letter.
+      - Contains at least one lowercase letter.
+      - Contains at least one digit.
+      - Contains at least one special character.
+    """
+    if len(password) < 8:
+        raise HTTPException(status_code=400, detail="Password must be at least 8 characters long.")
+    if not re.search(r'[A-Z]', password):
+        raise HTTPException(status_code=400, detail="Password must contain at least one uppercase letter.")
+    if not re.search(r'[a-z]', password):
+        raise HTTPException(status_code=400, detail="Password must contain at least one lowercase letter.")
+    if not re.search(r'\d', password):
+        raise HTTPException(status_code=400, detail="Password must contain at least one digit.")
+    if not re.search(r'[!@#$%^&*(),.?":{}|<>]', password):
+        raise HTTPException(status_code=400, detail="Password must contain at least one special character.")
+
+# --- Generate Text Endpoint ---
 @router.post("/generate")
 def generate_text(
     request_data: GenerationRequest,
@@ -429,6 +451,9 @@ oauth.register(
 
 @router.post("/register")
 def register_user(user: RegisterRequest, db: Session = Depends(get_db)):
+    # Validate password using our requirements
+    validate_password(user.password)
+    
     existing_user = db.query(User).filter(User.username == user.username).first()
     if existing_user:
         raise HTTPException(status_code=400, detail="Username already registered")

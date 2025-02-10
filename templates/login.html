@@ -87,7 +87,8 @@
                 alert('Registration successful! Please login.');
                 toggleAuth();
             } else {
-                alert('Registration failed. The username may already be taken.');
+                const errorData = await response.json();
+                alert(errorData.detail);
             }
         });
     </script>
