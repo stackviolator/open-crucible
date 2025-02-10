@@ -77,29 +77,25 @@
       </div>
     </section>
 
+    <!-- Chat Window Section -->
+    <div class="chat-window">
+        <h2>Conversation History</h2>
+        <div class="chat-history" id="chatHistory">
+        <!-- Chat messages will be appended here -->
+        </div>
+        <!-- Optional: Chat input area for new messages -->
+        <div class="chat-input">
+        <input type="text" id="chatInput" class="styled-input" placeholder="Type your message here..." />
+        <button id="chatSendBtn" class="btn-submit">Send</button>
+        </div>
+    </div>
+
     <section>
       <h2>System Prompt:</h2>
       <div class="prompt-box">
         <!-- Populated by JavaScript -->
       </div>
     </section>
-
-    <section>
-      <h2>User Prompt:</h2>
-      <textarea id="userPrompt" rows="4" cols="70" class="styled-input" placeholder="Type your prompt here..."></textarea>
-      <br/><br/>
-      <button id="submitBtn" class="btn-submit">Submit</button>
-    </section>
-
-    <div id="modelSpinner" class="spinner hidden">
-      <div class="loader"></div>
-    </div>
-    <div id="modelStatusMessage"></div>
-
-    <div id="spinner" class="spinner hidden">
-      <div class="loader"></div>
-      <p>Generating text...</p>
-    </div>
 
     <hr />
 
