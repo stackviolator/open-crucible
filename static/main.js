@@ -215,10 +215,6 @@ document.addEventListener("DOMContentLoaded", async () => {
                         origin: { y: 0.6 }
                     });
                     showToast("another morbilly in the bank", "success");
-                    // Add delay before refreshing the page
-                    setTimeout(() => {
-                        window.location.reload();
-                    }, 3000); // 2 second delay to see the confetti
                 }
             } catch (error) {
                 // Remove waiting bubble if error occurs
