@@ -316,15 +316,36 @@ h1, h2 {
 }
 
 .styled-input {
-  padding: 8px 12px;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-color: #333;
+  color: #fff;
   border: 1px solid #555;
-  border-radius: 4px;
-  background-color: #444;
-  color: #eee;
+  border-radius: 8px;
+  padding: 12px 20px 12px 15px;
   font-size: 1rem;
-  width: 100%;
-  max-width: 400px;
-  margin-top: 5px;
+  transition: background-color 0.3s ease, border-color 0.3s ease;
+  /* Add these rules to remove spinners */
+  /* For Chrome, Safari, Edge, Opera */
+  &::-webkit-outer-spin-button,
+  &::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+  
+  /* For Firefox */
+  &[type="number"] {
+    -moz-appearance: textfield;
+  }
+}
+
+/* Move dropdown arrow to select elements only */
+select.styled-input {
+  background-image: url("data:image/svg+xml,%3Csvg%20viewBox='0%200%20140%20140'%20xmlns='http://www.w3.org/2000/svg'%3E%3Cpolygon%20points='70,90%2030,50%20110,50'%20fill='%23ccc'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 15px center;
+  background-size: 12px;
 }
 
 .styled-label {
@@ -524,23 +545,6 @@ h1, h2 {
 /* ---------------------------------------------------------------- */
 /* Custom Dropdown Styling for .styled-input */
 /* ---------------------------------------------------------------- */
-.styled-input {
-  appearance: none;
-  -webkit-appearance: none;
-  -moz-appearance: none;
-  background-color: #333;
-  color: #fff;
-  border: 1px solid #555;
-  border-radius: 8px;
-  padding: 12px 20px 12px 15px;
-  font-size: 1rem;
-  transition: background-color 0.3s ease, border-color 0.3s ease;
-  background-image: url("data:image/svg+xml,%3Csvg%20viewBox='0%200%20140%20140'%20xmlns='http://www.w3.org/2000/svg'%3E%3Cpolygon%20points='70,90%2030,50%20110,50'%20fill='%23ccc'/%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: right 15px center;
-  background-size: 12px;
-}
-
 .styled-input:hover {
   background-color: #444;
   border-color: #666;
