@@ -83,6 +83,8 @@ def generate_text(
     session: dict = Depends(get_session),
     db: Session = Depends(get_db)
 ):
+    if isinstance(session, Response):
+        return session
     """
     Generate text using the language model based on the user's prompt.
     Records the conversation (system prompt, user prompt, and assistant reply) in the database,
@@ -245,6 +247,8 @@ def generate_text(
 
 @router.get("/get_prompt")
 def get_prompt(key: int, session: dict = Depends(get_session)):
+    if isinstance(session, Response):
+        return session
     """
     Retrieve the system prompt corresponding to the specified key.
     """
@@ -263,6 +267,8 @@ def change_model(
     request: Request,
     session: dict = Depends(get_session)
 ):
+    if isinstance(session, Response):
+        return session
     """
     Change the currently active language model.
     """
@@ -297,6 +303,8 @@ def get_chat_history(
     session: dict = Depends(get_session),
     db: Session = Depends(get_db)
 ):
+    if isinstance(session, Response):
+        return session
     """
     Retrieve the chat history for the currently authenticated user and the current conversation.
     Only messages tied to the session's conversation_id will be returned.
@@ -341,6 +349,10 @@ async def root(request: Request):
 
 @router.get("/dashboard", response_class=HTMLResponse)
 def dashboard(request: Request, response: Response, session: dict = Depends(get_session)):
+    # If get_session returns a Response object (redirect), return it
+    if isinstance(session, Response):
+        return session
+        
     prompt_options = list(SYSTEM_PROMPTS.keys())
     return templates.TemplateResponse("index.html", {
         "request": request,
@@ -355,6 +367,8 @@ def update_level(
     response: Response,
     session: dict = Depends(get_session)
 ):
+    if isinstance(session, Response):
+        return session
     new_level = update.new_level
     highest_level = session.get("highest_level", 1)
 
@@ -374,10 +388,14 @@ def update_level(
 
 @router.get("/get_level")
 def get_level(request: Request, session: dict = Depends(get_session)):
+    if isinstance(session, Response):
+        return session
     return {"level": session.get("highest_level")}
 
 @router.get("/get_current_level")
 def get_current_level(session: dict = Depends(get_session)):
+    if isinstance(session, Response):
+        return session
     # Return both current_level and highest_level
     return {
         "current_level": session.get("current_level", session.get("highest_level", 1)),
@@ -386,6 +404,8 @@ def get_current_level(session: dict = Depends(get_session)):
 
 @router.get("/config")
 def get_config(session: dict = Depends(get_session)):
+    if isinstance(session, Response):
+        return session
     if not session:
         raise HTTPException(status_code=403, detail="Invalid session")
     max_level = max(int(k.split('-')[1]) for k in SYSTEM_PROMPTS.keys())
