@@ -18,6 +18,10 @@ def get_session(request: Request):
             return payload
         except Exception:
             # Token is expired or invalid.
-            raise HTTPException(status_code=401, detail="Invalid or expired token")
+            response = Response(status_code=status.HTTP_303_SEE_OTHER)
+            response.headers["Location"] = "/"
+            return response
     # No token was provided.
-    raise HTTPException(status_code=401, detail="Authentication required")
+    response = Response(status_code=status.HTTP_303_SEE_OTHER)
+    response.headers["Location"] = "/"
+    return response
