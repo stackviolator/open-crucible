@@ -149,45 +149,8 @@
         authTitle.textContent = 'Register';
       }
     }
-  
-    // Handle native login form submission
-    document.getElementById('nativeLoginForm').addEventListener('submit', async function(e) {
-      e.preventDefault();
-      const username = document.getElementById('username').value;
-      const password = document.getElementById('password').value;
-      const response = await fetch('/login/native', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password })
-      });
-      if (response.ok) {
-        // On success, you might hide the auth component and show main content
-        document.getElementById('authContainer').classList.add('hidden');
-        document.getElementById('mainContent').classList.remove('hidden');
-        window.location.reload(); // or update the UI as needed
-      } else {
-        alert('Login failed. Please check your credentials.');
-      }
-    });
-  
-    // Handle native registration form submission
-    document.getElementById('nativeRegisterForm').addEventListener('submit', async function(e) {
-      e.preventDefault();
-      const username = document.getElementById('regUsername').value;
-      const password = document.getElementById('regPassword').value;
-      const response = await fetch('/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password })
-      });
-      if (response.ok) {
-        alert('Registration successful! Please login.');
-        toggleAuth();
-      } else {
-        alert('Registration failed. The username may already be taken.');
-      }
-    });
   </script>
+
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
   <footer class="footer">
     <div class="footer-links">

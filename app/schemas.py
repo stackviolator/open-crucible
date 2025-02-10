@@ -17,3 +17,6 @@ class RegisterRequest(BaseModel):
 class LoginRequest(BaseModel):
     username: str
     password: str
+
+class UpdateLevelRequest(BaseModel):
+    new_level: int

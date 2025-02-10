@@ -1,18 +1,22 @@
 // static/main.js
 
 document.addEventListener("DOMContentLoaded", async () => {
-    let currentUserLevel = 1; // default fallback
-    let maxLevel = 3; // default fallback
+    // Default fallbacks
+    let currentLevel = 1;   // The level the user wants to play
+    let highestLevel = 1;   // The maximum level the user has cleared
+    let maxLevel = 3;       // The maximum level available in the system
 
     try {
-      // Fetch the current user level as before...
+      // Fetch both current and highest level from the server
       const levelResponse = await fetch('/get_current_level');
       if (levelResponse.ok) {
         const levelData = await levelResponse.json();
-        currentUserLevel = parseInt(levelData.level);
+        // Add validation for current_level and highest_level
+        currentLevel = parseInt(levelData.current_level);
+        highestLevel = parseInt(levelData.highest_level);
       }
       
-      // Fetch the configuration including max_level
+      // Fetch configuration, including the system's max level
       const configResponse = await fetch('/config');
       if (configResponse.ok) {
         const configData = await configResponse.json();
@@ -20,7 +24,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       }
 
       // Fetch and display the initial prompt for the current level
-      const promptResponse = await fetch(`/get_prompt?key=${currentUserLevel}`);
+      const promptResponse = await fetch(`/get_prompt?key=${currentLevel}`);
       if (promptResponse.ok) {
         const promptData = await promptResponse.json();
         const promptDisplayElement = document.querySelector(".prompt-box");
@@ -29,17 +33,17 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
       }
     } catch (error) {
-      console.warn("Failed to fetch current level:", error);
+      console.warn("Failed to fetch level information:", error);
     }
 
-      // Now update the progress bar using maxLevel
-      const progressBarContainer = document.querySelector('.progress-bar-container');
-      const progressPercentage = ((currentUserLevel - 1) / maxLevel) * 100;
-      const progressBar = document.querySelector('.progress-bar');
-      if (progressBar && progressBarContainer) {
-          progressBar.style.width = `${progressPercentage}%`;
-          progressBarContainer.setAttribute('data-text', `${currentUserLevel - 1}/${maxLevel}`);
-      }
+    // Update the progress bar using highestLevel (to reflect cleared progress)
+    const progressBarContainer = document.querySelector('.progress-bar-container');
+    const progressPercentage = ((highestLevel - 1) / maxLevel) * 100;
+    const progressBar = document.querySelector('.progress-bar');
+    if (progressBar && progressBarContainer) {
+      progressBar.style.width = `${progressPercentage}%`;
+      progressBarContainer.setAttribute('data-text', `${highestLevel - 1}/${maxLevel}`);
+    }
     
     // Define the pastel color palette for token visualizations.
     const defaultTokenColors = [
@@ -64,26 +68,26 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
     // --- End Toast Function Implementation ---
  
-    // After fetching currentUserLevel and updating the progress bar:
+    // After fetching levels, update the level selection dropdown
     const levelSelect = document.getElementById("systemPromptChoice");
     if (levelSelect) {
-    // Loop through options to enable/disable based on currentUserLevel.
-    for (let option of levelSelect.options) {
+      // Enable options up to highestLevel and grey out the others
+      for (let option of levelSelect.options) {
         const optionLevel = parseInt(option.value);
-        if (optionLevel <= currentUserLevel) {
-        option.disabled = false;
-        option.textContent = option.textContent.replace(" 🔒", "");
+        if (optionLevel <= highestLevel) {
+          option.disabled = false;
+          option.textContent = option.textContent.replace(" 🔒", "");
         } else {
-        option.disabled = true;
-        if (!option.textContent.includes("🔒")) {
+          option.disabled = true;
+          if (!option.textContent.includes("🔒")) {
             option.textContent += " 🔒";
+          }
         }
-        }
-    }
-    // Automatically select the option matching the current user's level.
-    levelSelect.value = currentUserLevel.toString();
+      }
+      // Automatically select the option matching the current_level
+      levelSelect.value = currentLevel.toString();
     } else {
-    console.warn("levelSelect is missing.");
+      console.warn("levelSelect is missing.");
     }
   
     // Get references to other key DOM elements.
@@ -221,25 +225,25 @@ document.addEventListener("DOMContentLoaded", async () => {
         });
     }
   
-    // When the level selection changes, fetch the corresponding system prompt text.
+    // When the level selection changes, update the level and reset the conversation.
     levelSelect.addEventListener("change", async (event) => {
-      const selectedKey = event.target.value;
-      try {
-        const response = await fetch(`/get_prompt?key=${selectedKey}`);
+    const newLevel = event.target.value;
+    try {
+        const response = await fetch("/update_level", {
+            method: "POST",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify({ new_level: parseInt(newLevel) })
+        });
         if (!response.ok) {
-          throw new Error(`Server returned ${response.status}`);
+            throw new Error(`Server returned ${response.status}`);
         }
-        const data = await response.json();
-        const promptDisplayElement = document.querySelector(".prompt-box");
-        if (promptDisplayElement) {
-          promptDisplayElement.innerText = data.prompt_text;
-        } else {
-          console.error("Element with class 'prompt-box' not found.");
-        }
-      } catch (error) {
-        console.error("Error fetching system prompt text:", error);
-      }
-    });
+        // Reload the page so that a new conversation is started.
+        window.location.reload();
+    } catch (error) {
+        console.error("Error updating level:", error);
+        showToast("Error updating level", "error");
+    }
+  });
   
     // Event listener for model selection change (unchanged).
     modelChoiceElem.addEventListener("change", async (event) => {
