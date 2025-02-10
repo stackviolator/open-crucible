@@ -84,6 +84,8 @@ def validate_password(password: str):
       - Contains at least one lowercase letter.
       - Contains at least one digit.
       - Contains at least one special character.
+      - Does not contain any whitespace.
+      - Less than 128 characters.
     """
     if len(password) < 8:
         raise HTTPException(status_code=400, detail="Password must be at least 8 characters long.")
@@ -95,6 +97,10 @@ def validate_password(password: str):
         raise HTTPException(status_code=400, detail="Password must contain at least one digit.")
     if not re.search(r'[!@#$%^&*(),.?":{}|<>]', password):
         raise HTTPException(status_code=400, detail="Password must contain at least one special character.")
+    if re.search(r'\s', password):
+        raise HTTPException(status_code=400, detail="Password cannot contain any whitespace.")
+    if len(password) > 128:
+        raise HTTPException(status_code=400, detail="Password cannot be longer than 128 characters.")
 
 # --- Generate Text Endpoint ---
 @router.post("/generate")

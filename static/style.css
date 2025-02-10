@@ -367,6 +367,62 @@ h1, h2 {
 }
 
 /* ---------------------------------------------------------------- */
+/* Message Box for Errors / Notifications */
+/* ---------------------------------------------------------------- */
+.message-box {
+  position: fixed;
+  top: calc(var(--top-bar-height) + 20px);
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 12px 20px;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: bold;
+  z-index: 1500;
+  opacity: 1;
+  transition: opacity 0.5s ease, transform 0.5s ease;
+}
+
+.message-box.error {
+  background-color: #dc3545;
+  color: #fff;
+}
+
+.message-box.success {
+  background-color: #28a745;
+  color: #fff;
+}
+
+.message-box.info {
+  background-color: #17a2b8;
+  color: #fff;
+}
+
+.message-box.fade-out {
+  opacity: 0;
+  transform: translateX(-50%) translateY(-20px);
+}
+
+/* ---------------------------------------------------------------- */
+/* Toggle Auth Button */
+/* ---------------------------------------------------------------- */
+.btn-toggle-auth {
+  background: none;
+  border: 1px solid #ccc;
+  color: #ccc;
+  padding: 8px 16px;
+  border-radius: 30px;
+  cursor: pointer;
+  transition: background-color 0.2s ease, color 0.2s ease;
+  font-size: 0.9rem;
+}
+
+.btn-toggle-auth:hover {
+  background-color: #444;
+  color: #fff;
+}
+
+/* ---------------------------------------------------------------- */
 /* Footer */
 /* ---------------------------------------------------------------- */
 .footer {

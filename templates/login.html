@@ -1,96 +1,139 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <meta charset="utf-8" />
-    <title>Login - Open Crucible</title>
-    <link rel="icon" href="/static/favicon.ico" type="image/x-icon" />
-    <link rel="stylesheet" href="/static/style.css" />
+  <meta charset="utf-8" />
+  <title>Login - Open Crucible</title>
+  <link rel="icon" href="/static/favicon.ico" type="image/x-icon" />
+  <link rel="stylesheet" href="/static/style.css" />
 </head>
 <body>
-    <div class="container">
-        <h1>Login to Open Crucible</h1>
-        
-        <!-- GitHub Login Button -->
-        <div class="auth-buttons">
-            <button class="btn-submit" onclick="window.location.href='/login/github'">
-                Login with GitHub
-            </button>
-        </div>
+  <div class="container">
+    <h1>Login to Open Crucible</h1>
 
-        <!-- Native Login Form -->
-        <div id="loginForm">
-            <form id="nativeLoginForm">
-                <label for="username" class="styled-label">Username</label>
-                <input type="text" id="username" class="styled-input" required />
-                <label for="password" class="styled-label">Password</label>
-                <input type="password" id="password" class="styled-input" required />
-                <button type="submit" class="btn-submit">Login</button>
-            </form>
-            <p>Don't have an account? <a href="#" onclick="toggleAuth()">Register here</a></p>
-        </div>
+    <!-- Message Box for errors / success notifications -->
+    <div id="errorBox" class="message-box hidden"></div>
 
-        <!-- Native Registration Form (hidden by default) -->
-        <div id="registerForm" class="hidden">
-            <form id="nativeRegisterForm">
-                <label for="regUsername" class="styled-label">Username</label>
-                <input type="text" id="regUsername" class="styled-input" required />
-                <label for="regPassword" class="styled-label">Password</label>
-                <input type="password" id="regPassword" class="styled-input" required />
-                <button type="submit" class="btn-submit">Register</button>
-            </form>
-            <p>Already have an account? <a href="#" onclick="toggleAuth()">Login here</a></p>
-        </div>
+    <!-- GitHub Login Button -->
+    <div class="auth-buttons">
+      <button class="btn-submit" onclick="window.location.href='/login/github'">
+        Login with GitHub
+      </button>
     </div>
 
-    <script>
-        // Toggle between login and registration forms
-        function toggleAuth() {
-            const loginForm = document.getElementById('loginForm');
-            const registerForm = document.getElementById('registerForm');
-            if (loginForm.classList.contains('hidden')) {
-                loginForm.classList.remove('hidden');
-                registerForm.classList.add('hidden');
-            } else {
-                loginForm.classList.add('hidden');
-                registerForm.classList.remove('hidden');
-            }
-        }
+    <!-- Native Login Form -->
+    <div id="loginForm">
+      <form id="nativeLoginForm">
+        <label for="username" class="styled-label">Username</label>
+        <input type="text" id="username" class="styled-input" required />
+        <label for="password" class="styled-label">Password</label>
+        <input type="password" id="password" class="styled-input" required />
+        <button type="submit" class="btn-submit">Login</button>
+      </form>
+      <p>
+        Don't have an account? 
+        <button type="button" class="btn-toggle-auth" onclick="toggleAuth()">
+          Register here
+        </button>
+      </p>
+    </div>
 
-        // Handle native login form submission
-        document.getElementById('nativeLoginForm').addEventListener('submit', async function(e) {
-            e.preventDefault();
-            const username = document.getElementById('username').value;
-            const password = document.getElementById('password').value;
-            const response = await fetch('/login/native', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username, password })
-            });
-            if (response.ok) {
-                window.location.href = '/';
-            } else {
-                alert('Login failed. Please check your credentials.');
-            }
-        });
+    <!-- Native Registration Form (hidden by default) -->
+    <div id="registerForm" class="hidden">
+      <form id="nativeRegisterForm">
+        <label for="regUsername" class="styled-label">Username</label>
+        <input type="text" id="regUsername" class="styled-input" required />
+        <label for="regPassword" class="styled-label">Password</label>
+        <input type="password" id="regPassword" class="styled-input" required />
+        <button type="submit" class="btn-submit">Register</button>
+      </form>
+      <p>
+        Already have an account? 
+        <button type="button" class="btn-toggle-auth" onclick="toggleAuth()">
+          Login here
+        </button>
+      </p>
+    </div>
+  </div>
 
-        // Handle native registration form submission
-        document.getElementById('nativeRegisterForm').addEventListener('submit', async function(e) {
-            e.preventDefault();
-            const username = document.getElementById('regUsername').value;
-            const password = document.getElementById('regPassword').value;
-            const response = await fetch('/register', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username, password })
-            });
-            if (response.ok) {
-                alert('Registration successful! Please login.');
-                toggleAuth();
-            } else {
-                const errorData = await response.json();
-                alert(errorData.detail);
-            }
-        });
-    </script>
+  <script>
+    // Toggle between login and registration forms
+    function toggleAuth() {
+      const loginForm = document.getElementById('loginForm');
+      const registerForm = document.getElementById('registerForm');
+      clearMessage(); // Clear any existing messages when switching forms
+      if (loginForm.classList.contains('hidden')) {
+        loginForm.classList.remove('hidden');
+        registerForm.classList.add('hidden');
+      } else {
+        loginForm.classList.add('hidden');
+        registerForm.classList.remove('hidden');
+      }
+    }
+
+    // Function to display a message in the errorBox
+    // 'type' can be 'error', 'success', or 'info'
+    function showMessage(message, type = 'error') {
+      const messageBox = document.getElementById('errorBox');
+      messageBox.textContent = message;
+      messageBox.className = 'message-box ' + type; // sets the background (error/success/info)
+      messageBox.classList.remove('hidden');
+
+      // Automatically fade out the message after 3 seconds
+      setTimeout(() => {
+        messageBox.classList.add('fade-out');
+        setTimeout(() => {
+          clearMessage();
+        }, 500); // match the CSS transition duration
+      }, 3000);
+    }
+
+    // Clear the message box
+    function clearMessage() {
+      const messageBox = document.getElementById('errorBox');
+      messageBox.textContent = '';
+      messageBox.className = 'message-box hidden';
+    }
+
+    // Handle native login form submission
+    document.getElementById('nativeLoginForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      clearMessage();
+      const username = document.getElementById('username').value;
+      const password = document.getElementById('password').value;
+      const response = await fetch('/login/native', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password })
+      });
+      if (response.ok) {
+        window.location.href = '/';
+      } else {
+        showMessage('Login failed. Please check your credentials.', 'error');
+      }
+    });
+
+    // Handle native registration form submission
+    document.getElementById('nativeRegisterForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      clearMessage();
+      const username = document.getElementById('regUsername').value;
+      const password = document.getElementById('regPassword').value;
+      const response = await fetch('/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password })
+      });
+      if (response.ok) {
+        showMessage('Registration successful! Please login.', 'success');
+        // Optionally switch to the login form after a brief pause
+        setTimeout(() => {
+          toggleAuth();
+        }, 1500);
+      } else {
+        const errorData = await response.json();
+        showMessage(errorData.detail, 'error');
+      }
+    });
+  </script>
 </body>
-</html> 
+</html>
