@@ -5,62 +5,31 @@
   --footer-height: 60px;
 }
 
-/* Enhanced Animated Geometric Background */
-
-/* 
- The body's background now includes two animated radial gradients for subtle movement.
- These sit beneath two rotating, smoother, curved pseudo‑elements that combine linear 
- and radial gradients for extra texture.
-*/
 body {
-  position: relative;         /* For positioning pseudo-elements */
-  overflow: hidden;           /* Hide animated elements overflowing the viewport */
-  /* Multiple background layers:
-       - Two soft radial gradients using purple and blue hues.
-       - The solid fallback color.
-  */
-  background: 
-    radial-gradient(circle at 30% 30%, rgba(63,39,63,0.15), transparent 70%),
-    radial-gradient(circle at 70% 70%, rgba(25,85,124,0.15), transparent 70%),
-    #1c1c1c;
-  background-size: 300px 300px, 300px 300px, cover;
-  animation: backgroundMove 40s linear infinite;
+  position: relative;
+  overflow: hidden;
+  background: #1c1c1c;
   font-family: Arial, sans-serif;
   margin: 0;
   padding: 20px;
   color: #ccc;
 }
 
-/* Keyframes for the subtle background movement */
-@keyframes backgroundMove {
-  0% { background-position: 0 0, 0 0, 0 0; }
-  50% { background-position: 100px 100px, -100px -100px, 0 0; }
-  100% { background-position: 0 0, 0 0, 0 0; }
-}
-
-/* Pseudo-elements for animated smoother shapes */
-
-/* Both pseudo-elements now include a radial-gradient overlay for extra texture.
- The first uses a linear gradient (gray to blue) blended with a soft purple gradient.
- The second uses a linear gradient (gray to purple) blended with a soft blue gradient.
- 
- The clip-path has been updated from a rigid diamond (polygon) to a smoother curved shape.
- The new clip-path is defined via an experimental path() function:
-    "M 50% 0% Q 100% 50% 50% 100% Q 0% 50% 50% 0% Z"
- which draws a curved diamond shape.
+/* ---------------------------------------------------------------- */
+/* Pseudo-elements for Animated Floating Shapes */
+/* ---------------------------------------------------------------- */
+/* These elements now render as 400×400px rounded squares (border-radius: 20px)
+   with a slightly increased opacity (0.8) and use your gradient overlays.
 */
 body::before,
 body::after {
   content: "";
   position: absolute;
   z-index: -1;
-  opacity: 0.7;
+  opacity: 0.8;
   width: 400px;
   height: 400px;
-  /* Use the new smoother shape */
-  clip-path: path("M 50% 0% Q 100% 50% 50% 100% Q 0% 50% 50% 0% Z");
-  /* Fallback (optional): */
-  /* clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%); */
+  border-radius: 20px;  /* Rounded square */
   background-blend-mode: screen;
 }
 
@@ -100,7 +69,9 @@ body::after {
   }
 }
 
+/* ---------------------------------------------------------------- */
 /* Top Bar Styles */
+/* ---------------------------------------------------------------- */
 .top-bar {
   position: fixed;
   top: 0;
@@ -166,7 +137,9 @@ body::after {
   background-color: #402840;
 }
 
-/* Sidebar Styles (unchanged except for dropdown naming) */
+/* ---------------------------------------------------------------- */
+/* Sidebar Styles */
+/* ---------------------------------------------------------------- */
 .sidebar {
   position: fixed;
   top: var(--top-bar-height);
@@ -178,7 +151,7 @@ body::after {
   padding: 20px;
   box-shadow: 2px 0 5px rgba(0, 0, 0, 0.3);
   transition: transform 0.3s ease;
-  z-index: 1100; /* Increased from 900 to 1100 */
+  z-index: 1100;
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -231,14 +204,16 @@ body::after {
 }
 
 .dropdown-content.active {
-  max-height: 500px; /* Adjust as needed for content */
+  max-height: 500px;
   opacity: 1;
 }
 
-/* Adjust the container to start below the top bar */
+/* ---------------------------------------------------------------- */
+/* Container */
+/* ---------------------------------------------------------------- */
 .container {
   max-width: 800px;
-  margin: 100px auto 0 auto;  /* Top margin adjusted to allow room for the top bar */
+  margin: 100px auto 0 auto;
   background: #2a2a2a;
   padding: 20px;
   border-radius: 8px;
@@ -246,7 +221,9 @@ body::after {
   color: #ddd;
 }
 
-/* (Rest of your existing CSS remains unchanged) */
+/* ---------------------------------------------------------------- */
+/* Other Styles (Headings, Prompts, Tokens, etc.) */
+/* ---------------------------------------------------------------- */
 h1, h2 {
   color: #ddd;
 }
@@ -427,7 +404,9 @@ h1, h2 {
   color: #ccc;
 }
 
+/* ---------------------------------------------------------------- */
 /* Progress Bar Styles */
+/* ---------------------------------------------------------------- */
 .progress-bar-container {
   width: 100%;
   max-width: 400px;
@@ -437,12 +416,12 @@ h1, h2 {
   margin-bottom: 20px;
   position: relative;
   box-shadow: inset 0 1px 3px rgba(0,0,0,0.3);
-  height: 20px; /* Explicitly set height */
+  height: 20px;
 }
 
 .progress-bar {
   height: 100%;
-  width: 0; /* Will be set dynamically via JavaScript */
+  width: 0;
   background: linear-gradient(90deg, #8e44ad, #9b59b6);
   border-radius: 10px;
   transition: width 0.5s ease;
@@ -465,7 +444,9 @@ h1, h2 {
   pointer-events: none;
 }
 
-/* Optional: Style for the new level selection section */
+/* ---------------------------------------------------------------- */
+/* Level Selection Section */
+/* ---------------------------------------------------------------- */
 #levelSelection {
   margin-bottom: 20px;
 }
@@ -474,7 +455,9 @@ h1, h2 {
   margin-bottom: 10px;
 }
 
+/* ---------------------------------------------------------------- */
 /* Custom Dropdown Styling for .styled-input */
+/* ---------------------------------------------------------------- */
 .styled-input {
   appearance: none;
   -webkit-appearance: none;
@@ -486,7 +469,7 @@ h1, h2 {
   padding: 12px 20px 12px 15px;
   font-size: 1rem;
   transition: background-color 0.3s ease, border-color 0.3s ease;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 140 140' xmlns='http://www.w3.org/2000/svg'%3E%3Cpolygon points='70,90 30,50 110,50' fill='%23ccc'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg%20viewBox='0%200%20140%20140'%20xmlns='http://www.w3.org/2000/svg'%3E%3Cpolygon%20points='70,90%2030,50%20110,50'%20fill='%23ccc'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
   background-position: right 15px center;
   background-size: 12px;
@@ -547,7 +530,9 @@ h1, h2 {
   background-color: #c82333;
 }
 
-/* Chat window container */
+/* ---------------------------------------------------------------- */
+/* Chat Window & Messages */
+/* ---------------------------------------------------------------- */
 .chat-window {
   background-color: #2a2a2a;
   border: 1px solid #444;
@@ -557,7 +542,6 @@ h1, h2 {
   color: #eee;
 }
 
-/* Chat history area */
 .chat-history {
   max-height: 300px;
   overflow-y: auto;
@@ -565,7 +549,6 @@ h1, h2 {
   margin-bottom: 10px;
 }
 
-/* Base style for chat message bubbles */
 .chat-message {
   max-width: 70%;
   margin-bottom: 10px;
@@ -575,7 +558,6 @@ h1, h2 {
   word-wrap: break-word;
 }
 
-/* Style for user messages */
 .chat-message.user {
   background-color: #3f273f;
   color: #fff;
@@ -583,7 +565,6 @@ h1, h2 {
   border-bottom-right-radius: 0;
 }
 
-/* Style for assistant messages */
 .chat-message.assistant {
   background-color: #402840;
   color: #fff;
