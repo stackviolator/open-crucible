@@ -1,5 +1,3 @@
-// static/main.js
-
 document.addEventListener("DOMContentLoaded", async () => {
     // Default fallbacks
     let currentLevel = 1;   // The level the user wants to play
@@ -63,6 +61,14 @@ document.addEventListener("DOMContentLoaded", async () => {
       "#FFFFCC", // pastel yellow
       "#FFEBCC"  // pastel peach
     ];
+
+    // Add difficulty colors definition
+    const difficultyColors = {
+      "Easy": "#28a745",    // green
+      "Medium": "#fd7e14",  // orange
+      "Hard": "#dc3545",    // red
+      "Completed": "#9b59b6" // purple
+    };
   
     // --- Toast Function Implementation ---
     function showToast(message, type = "info") {
@@ -79,28 +85,110 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
     // --- End Toast Function Implementation ---
  
-    // Replace existing level selection dropdown logic
-    const levelSelect = document.getElementById("systemPromptChoice");
-    if (levelSelect) {
-        // Clear any existing options
-        levelSelect.innerHTML = '';
+    // Build custom level selection boxes
+    const levelContainer = document.getElementById("levelSelectionContainer");
+    if (levelContainer) {
+        // Clear any existing content
+        levelContainer.innerHTML = '';
         // Sort levels by their index
         levelsData.sort((a, b) => a.index - b.index);
-        // Create an option element for each level
+        // Create a box for each level
         levelsData.forEach(level => {
-            const option = document.createElement("option");
-            option.value = level.index;
-            option.textContent = level.name;
+            const levelBox = document.createElement("div");
+            levelBox.className = "level-box";
+            // Build inner HTML with a difficulty badge inside a box
             if (level.index > highestLevel) {
-                option.disabled = true;
-                option.textContent += " 🔒";
+                levelBox.classList.add("disabled");
+                levelBox.innerHTML = `
+                  <div class="level-name">${level.name}</div>
+                  <div class="difficulty-box" style="background-color: gray;">
+                    Difficulty: Unknown 🔒
+                  </div>`;
+            } else {
+                const diffColor = level.index < currentLevel ? 
+                    difficultyColors["Completed"] : 
+                    difficultyColors[level.difficulty] || "#ccc";
+                levelBox.innerHTML = `
+                  <div class="level-name">${level.name}</div>
+                  <div class="difficulty-box" style="background-color: ${diffColor};">
+                    ${level.difficulty}
+                  </div>`;
+                if (level.index === currentLevel) {
+                    levelBox.classList.add("selected");
+                } else {
+                    // Only add click handler if it's not the current level
+                    levelBox.addEventListener("click", async () => {
+                        try {
+                            const response = await fetch("/update_level", {
+                                method: "POST",
+                                headers: {"Content-Type": "application/json"},
+                                body: JSON.stringify({ new_level: level.index })
+                            });
+                            if (!response.ok) {
+                                throw new Error(`Server returned ${response.status}`);
+                            }
+                            // Reload the page so that a new conversation is started.
+                            window.location.reload();
+                        } catch (error) {
+                            console.error("Error updating level:", error);
+                            showToast("Error updating level", "error");
+                        }
+                    });
+                }
             }
-            levelSelect.appendChild(option);
+            levelContainer.appendChild(levelBox);
         });
-        // Select the current level
-        levelSelect.value = currentLevel.toString();
-    } else {
-        console.warn("levelSelect element not found.");
+    }
+  
+    // Add toggle functionality for level selection
+    const levelHeader = document.getElementById("levelSelectionHeader");
+    const toggleIcon = document.getElementById("levelToggleIcon");
+    if (levelHeader && levelContainer && toggleIcon) {
+        // Get saved state from localStorage, default to collapsed (false)
+        const isExpanded = localStorage.getItem('levelSelectExpanded') === 'true';
+        
+        // Set initial state based on saved preference
+        toggleIcon.innerHTML = isExpanded 
+            ? '<i class="fa-solid fa-chevron-down"></i>'
+            : '<i class="fa-solid fa-chevron-up"></i>';
+        
+        if (isExpanded) {
+            levelContainer.classList.add('active');
+        }
+        
+        levelHeader.addEventListener("click", () => {
+            levelContainer.classList.toggle('active');
+            const isNowExpanded = levelContainer.classList.contains('active');
+            
+            // Save state to localStorage
+            localStorage.setItem('levelSelectExpanded', isNowExpanded);
+            
+            toggleIcon.innerHTML = isNowExpanded
+                ? '<i class="fa-solid fa-chevron-down"></i>'
+                : '<i class="fa-solid fa-chevron-up"></i>';
+        });
+    }
+
+    // Add chat window resizer
+    const chatHistory = document.getElementById("chatHistory");
+    const chatResizer = document.getElementById("chatResizer");
+    if (chatHistory && chatResizer) {
+        let isResizing = false;
+        chatResizer.addEventListener("mousedown", (e) => {
+            isResizing = true;
+            document.body.style.cursor = "ns-resize";
+        });
+        document.addEventListener("mousemove", (e) => {
+            if (!isResizing) return;
+            const newHeight = Math.max(100, e.clientY - chatHistory.getBoundingClientRect().top);
+            chatHistory.style.height = `${newHeight}px`;
+        });
+        document.addEventListener("mouseup", () => {
+            if (isResizing) {
+                isResizing = false;
+                document.body.style.cursor = "default";
+            }
+        });
     }
   
     // Get references to other key DOM elements.
@@ -144,14 +232,13 @@ document.addEventListener("DOMContentLoaded", async () => {
             
             // Get model settings
             const modelChoice = document.getElementById("modelChoice").value;
-            const systemPromptChoice = document.getElementById('systemPromptChoice').value;
             const maxTokens = parseInt(document.getElementById('maxTokens').value) || 100;
             
             const payload = {
                 user_prompt: userMessage,
                 max_new_tokens: maxTokens,
                 model_choice: modelChoice,
-                system_prompt_choice: `level-${systemPromptChoice}`
+                system_prompt_choice: `level-${currentLevel}`
             };
 
             // Clear input and show loading state
@@ -228,6 +315,21 @@ document.addEventListener("DOMContentLoaded", async () => {
                         origin: { y: 0.6 }
                     });
                     showToast("another morbilly in the bank", "success");
+                    
+                    // Add countdown toast
+                    let countdown = 5;
+                    const countdownInterval = setInterval(() => {
+                        showToast(`Page will reset in ${countdown - 1} seconds...`, "info");
+                        countdown--;
+                        if (countdown < 0) {
+                            clearInterval(countdownInterval);
+                        }
+                    }, 1000);
+
+                    // Add page refresh after 5 seconds
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 5000);
                 }
             } catch (error) {
                 // Remove waiting bubble if error occurs
@@ -237,26 +339,6 @@ document.addEventListener("DOMContentLoaded", async () => {
             }
         });
     }
-  
-    // When the level selection changes, update the level and reset the conversation.
-    levelSelect.addEventListener("change", async (event) => {
-    const newLevel = event.target.value;
-    try {
-        const response = await fetch("/update_level", {
-            method: "POST",
-            headers: {"Content-Type": "application/json"},
-            body: JSON.stringify({ new_level: parseInt(newLevel) })
-        });
-        if (!response.ok) {
-            throw new Error(`Server returned ${response.status}`);
-        }
-        // Reload the page so that a new conversation is started.
-        window.location.reload();
-    } catch (error) {
-        console.error("Error updating level:", error);
-        showToast("Error updating level", "error");
-    }
-  });
   
     // Event listener for model selection change (unchanged).
     modelChoiceElem.addEventListener("change", async (event) => {

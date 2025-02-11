@@ -292,8 +292,8 @@ h1, h2 {
 }
 
 .btn-submit {
-  background: linear-gradient(135deg, #3f273f 0%, #402840 25%, #3e263e 50%, #3e283f 75%, #3d253d 100%);
-  border: none;
+  background-color: #9b59b6;
+  border: none; 
   color: white;
   padding: 12px 24px;
   font-size: 1rem;
@@ -306,6 +306,7 @@ h1, h2 {
 
 .btn-submit:hover,
 .btn-submit:focus {
+  background-color: #5a225a;
   transform: translateY(-2px);
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
 }
@@ -496,7 +497,6 @@ select.styled-input {
 /* ---------------------------------------------------------------- */
 .progress-bar-container {
   width: 100%;
-  max-width: 400px;
   background: #444;
   border-radius: 10px;
   overflow: hidden;
@@ -540,6 +540,96 @@ select.styled-input {
 
 #levelSelection h2 {
   margin-bottom: 10px;
+}
+
+#levelSelectionContainer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 10px;
+  /* Slower, gentler animation */
+  max-height: 0;
+  overflow: hidden;
+  opacity: 0;
+  transition: max-height 0.8s ease-in-out, opacity 0.6s ease-in-out;
+}
+
+#levelSelectionContainer.active {
+  max-height: 500px;
+  opacity: 1;
+}
+
+.level-box {
+  border: 1px solid #555;
+  border-radius: 8px;
+  padding: 10px;
+  min-width: 150px;
+  text-align: center;
+  background-color: #333;
+  cursor: pointer;
+  transition: transform 0.2s ease, background-color 0.2s ease, border-color 0.2s ease;
+}
+
+/* Add new style for completed levels */
+.level-box[data-completed="true"] {
+  background-color: #2d1f2d;  /* Darker purple tint */
+  border-color: #9b59b6;
+}
+
+.level-box[data-completed="true"]:hover {
+  background-color: #3d2f3d;
+}
+
+.level-box:hover {
+  transform: translateY(-2px);
+  background-color: #444;
+}
+
+.level-box.selected {
+  border: 2px solid #fff;
+  cursor: default;
+  opacity: 0.8;
+}
+
+.level-box.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.level-name {
+  font-size: 1.1rem;
+  font-weight: bold;
+  margin-bottom: 5px;
+}
+
+.difficulty-box {
+  display: inline-block;
+  padding: 4px 8px;
+  border-radius: 4px;
+  color: #fff;
+  font-size: 0.9rem;
+  margin-top: 5px;
+}
+
+#levelSelectionHeader {
+  cursor: pointer;
+  user-select: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* Chat Window Resizer */
+#chatResizer {
+  height: 6px;
+  background-color: #555;
+  cursor: ns-resize;
+  border-radius: 3px;
+  margin: 5px 0;
+}
+
+#chatResizer:hover {
+  background-color: #777;
 }
 
 /* ---------------------------------------------------------------- */

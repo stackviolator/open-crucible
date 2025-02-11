@@ -7,6 +7,7 @@
   <title>Open Crucible</title>
   <link rel="icon" href="/static/favicon.ico" type="image/x-icon" />
   <link rel="stylesheet" href="/static/style.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 </head>
 <body>
   <!-- Top Bar -->
@@ -30,7 +31,7 @@
   <div class="sidebar" id="sidebar">
     <div class="dropdown">
       <h2 class="dropdown-header" onclick="toggleDropdown()">
-        Options <span id="dropdownArrow">▼</span>
+        Options <span id="dropdownArrow"><i class="fa-solid fa-chevron-down"></i></span>
       </h2>
       <div class="dropdown-content" id="dropdownContent">
         <section>
@@ -61,10 +62,10 @@
     
     <!-- Levels Section -->
     <section id="levelSelection">
-      <h2>Select Level</h2>
-      <select id="systemPromptChoice" class="styled-input">
-        <!-- Populated by JavaScript -->
-      </select>
+      <h2 id="levelSelectionHeader">
+        Levels<span id="levelToggleIcon">▼</span>
+      </h2>
+      <div id="levelSelectionContainer"></div>
     </section>
 
     <!-- Progress Bar Section -->
@@ -81,10 +82,12 @@
         <div class="chat-history" id="chatHistory">
         <!-- Chat messages will be appended here -->
         </div>
+        <!-- Resizer handle for the chat window -->
+        <div id="chatResizer"></div>
         <!-- Optional: Chat input area for new messages -->
         <div class="chat-input">
-        <input type="text" id="chatInput" class="styled-input" placeholder="Type your message here..." />
-        <button id="chatSendBtn" class="btn-submit">Send</button>
+          <input type="text" id="chatInput" class="styled-input" placeholder="Type your message here..." />
+          <button id="chatSendBtn" class="btn-submit">Send</button>
         </div>
     </div>
 

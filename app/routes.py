@@ -446,6 +446,8 @@ def get_levels(session: dict = Depends(get_session)):
             "index": level["index"],
             "name": level["name"] if level["index"] <= highest_level else f"🔒 Level {level['index']} (Locked)",
             "description": level["description"] if level["index"] <= highest_level else "Complete the previous level to unlock this challenge!",
+            "difficulty": "Completed" if level["index"] < highest_level else 
+                         (level.get("difficulty", "Unknown") if level["index"] <= highest_level else "Unknown"),
             "locked": level["index"] > highest_level
         }
         for level in sorted(LEVELS.values(), key=lambda l: l.get("index", 0))
