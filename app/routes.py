@@ -13,12 +13,12 @@ from fastapi.templating import Jinja2Templates
 from sqlalchemy import create_engine, Column, Integer, String
 from sqlalchemy.orm import sessionmaker, declarative_base, Session
 
-from app.models import model, tokenizer, SYSTEM_PROMPTS, SYSTEM_PROMPT, load_model  # note the import of SYSTEM_PROMPTS
+from app.models import model, tokenizer, LEVELS, load_model
 from app.schemas import GenerationRequest, ChangeModelRequest, RegisterRequest, LoginRequest, UpdateLevelRequest
 from app.auth import create_access_token, ACCESS_TOKEN_EXPIRE_MINUTES, set_auth_cookie, verify_password, get_password_hash
 from app.dependencies import get_session
-from app.db import engine, SessionLocal
 from app.user_models import Base, User
+from app.db import engine, SessionLocal
 
 from authlib.integrations.starlette_client import OAuth, OAuthError
 from passlib.context import CryptContext
@@ -45,7 +45,7 @@ ASSISTANT_ROLE_END = "</assistant>"
 DEBUG_MODE = os.getenv("DEBUG", "false").lower() == "true"
 
 def strip_special_tokens(text: str) -> str:
-    # Build the list from the defined constants instead of hard coding
+    # Build the list from the defined constants instead of hard coding.
     tokens = [SYSTEM_ROLE, SYSTEM_ROLE_END, USER_ROLE, USER_ROLE_END, ASSISTANT_ROLE, ASSISTANT_ROLE_END]
     for token in tokens:
         text = text.replace(token, "")
@@ -56,10 +56,10 @@ class ChatHistory(Base):
     __tablename__ = "chat_history"
     id = Column(Integer, primary_key=True, index=True)
     username = Column(String, index=True)
-    conversation_id = Column(String, index=True)  # New column to tie records to a conversation UUID
-    user_prompt = Column(String)       # Will store the user prompt or system prompt (with tokens)
-    assistant_reply = Column(String)   # Will store the assistant reply (with tokens)
-    timestamp = Column(String)         # stored as ISO string
+    conversation_id = Column(String, index=True)  # Ties records to a conversation UUID.
+    user_prompt = Column(String)       # Stores the user prompt or system prompt (with tokens).
+    assistant_reply = Column(String)   # Stores the assistant reply (with tokens).
+    timestamp = Column(String)         # Stored as ISO string.
 
 # Create the tables if they don't exist.
 Base.metadata.create_all(bind=engine)
@@ -118,24 +118,27 @@ def generate_text(
     Records the conversation (system prompt, user prompt, and assistant reply) in the database,
     tied to a conversation UUID.
     """
-    # Check if the requested prompt level is accessible
-    if int(request_data.system_prompt_choice.split('-')[1]) > session.get("highest_level", 0):
-        raise HTTPException(status_code=403, detail="You do not have access to this prompt.")
-    
-    # Limit new tokens
-    if request_data.max_new_tokens > 200:
-        request_data.max_new_tokens = 200
+    # Convert the prompt choice (e.g. "level-1") to a numeric level.
+    try:
+        level_number = int(request_data.system_prompt_choice.split('-')[-1])
+    except Exception:
+        raise HTTPException(status_code=400, detail="Invalid prompt level format")
 
-    timestamp = datetime.utcnow().isoformat()
-    selected_system_prompt = SYSTEM_PROMPTS.get(request_data.system_prompt_choice, SYSTEM_PROMPT)
-    
+    if level_number > session.get("highest_level", 0):
+        raise HTTPException(status_code=403, detail="You do not have access to this prompt.")
+
+    # Look up the selected level from LEVELS using the level number.
+    selected_level = next((lvl for lvl in LEVELS.values() if lvl.get("index") == level_number), None)
+    selected_system_prompt = selected_level.get("system_prompt")
+
     if DEBUG_MODE:
-        print(f"DEBUG: Timestamp: {timestamp}")
+        print(f"DEBUG: Selected level index: {level_number}")
         print(f"DEBUG: Selected system prompt: {selected_system_prompt}")
 
     # --- Conversation UUID Management ---
     conversation_reset = session.get("reset_conversation", False)
     conversation_id = session.get("conversation_id")
+    timestamp = datetime.utcnow().isoformat()
     if conversation_reset or not conversation_id:
         conversation_id = str(uuid.uuid4())
         session["conversation_id"] = conversation_id
@@ -163,19 +166,19 @@ def generate_text(
     if DEBUG_MODE:
         print(f"DEBUG: Loaded {len(conversation_records)} records for conversation_id {conversation_id}")
 
-    conversation_text = ""
+    # Build final prompt starting with BOS token and system prompt
+    final_prompt = f"{BOS_TOKEN}\n{SYSTEM_ROLE}{selected_system_prompt}{SYSTEM_ROLE_END}\n"
+    
+    # Add each record from conversation history
     for record in conversation_records:
         if record.user_prompt:
-            conversation_text += record.user_prompt + "\n"
+            final_prompt += record.user_prompt + "\n"
         if record.assistant_reply:
-            conversation_text += record.assistant_reply + "\n"
-    
-    if DEBUG_MODE:
-        print("DEBUG: Constructed conversation text:\n", conversation_text)
+            final_prompt += record.assistant_reply + "\n"
 
-    # Build final prompt
-    conversation_text += f"<user>{request_data.user_prompt}</user>\n<assistant>"
-    final_prompt = f"{BOS_TOKEN}\n{conversation_text}"
+    # Add the new user prompt and assistant tag
+    final_prompt += f"<user>{request_data.user_prompt}</user>\n<assistant>"
+
     if DEBUG_MODE:
         print("DEBUG: Final prompt sent to model:\n", final_prompt)
 
@@ -185,14 +188,14 @@ def generate_text(
     attention_mask = prompt_inputs["attention_mask"].to(model.device)
     prompt_len = input_ids.shape[1]
 
-    # Get user input tokens for visualization
+    # For token visualization
     user_input_tokens = [tokenizer.decode(token) for token in input_ids[0]]
     
     with torch.no_grad():
         generated_ids = model.generate(
             input_ids,
             attention_mask=attention_mask,
-            max_new_tokens=request_data.max_new_tokens,
+            max_new_tokens=request_data.max_new_tokens if request_data.max_new_tokens <= 200 else 200,
             pad_token_id=tokenizer.pad_token_id,
             do_sample=True,
             temperature=0.7,
@@ -200,15 +203,13 @@ def generate_text(
             top_p=0.9,
         )
     
-    # Get output tokens for visualization
+    # Process generated tokens
     output_token_ids = generated_ids[0][prompt_len:]
-    output_tokens = [tokenizer.decode(token) for token in output_token_ids]
-    
     generated_text_only = tokenizer.decode(output_token_ids, skip_special_tokens=True)
     if "</assistant>" in generated_text_only:
         generated_text_only = generated_text_only.split("</assistant>")[0]
 
-    # Re-encode generated_text_only to get tokens for visualization
+    # For visualization: re-encode the generated text.
     output_tokens_ids = tokenizer.encode(generated_text_only)
     output_tokens = [tokenizer.decode(token) for token in output_tokens_ids]
 
@@ -220,8 +221,7 @@ def generate_text(
     jailbreak_success = "one" in lower_text and "morbillion" in lower_text
 
     try:
-        prompt_level = int(request_data.system_prompt_choice.split('-')[1])
-        if jailbreak_success and prompt_level >= session.get("highest_level", 0):
+        if jailbreak_success and level_number >= session.get("highest_level", 0):
             new_level = session.get("highest_level", 1) + 1
             user = db.query(User).filter(User.username == session["sub"]).first()
             if user:
@@ -250,7 +250,7 @@ def generate_text(
     except (AttributeError, IndexError, ValueError) as e:
         logging.warning(f"Error processing level update: {str(e)}. system_prompt_choice: {request_data.system_prompt_choice}, session: {session}")
 
-    # Store the conversation turn
+    # Store the conversation turn.
     new_record = ChatHistory(
         username=session["sub"],
         conversation_id=conversation_id,
@@ -269,24 +269,19 @@ def generate_text(
         "combined_prompt": final_prompt,
         "generated_text_only": generated_text_only,
         "jailbreak_success": jailbreak_success,
-        "user_tokens": user_input_tokens,  # Add token information
-        "output_tokens": output_tokens,    # Add token information
+        "user_tokens": user_input_tokens,   # Token information.
+        "output_tokens": output_tokens,       # Token information.
     }
 
 @router.get("/get_prompt")
 def get_prompt(key: int, session: dict = Depends(get_session)):
-    if isinstance(session, Response):
-        return session
     """
-    Retrieve the system prompt corresponding to the specified key.
+    Retrieve the system prompt corresponding to the specified level (by its index).
     """
-    level = session.get("highest_level")
-    if key > level:
+    if key > session.get("highest_level", 0):
         raise HTTPException(status_code=403, detail="You do not have access to this prompt.")
-
-    max_level = max(int(k.split('-')[1]) for k in SYSTEM_PROMPTS.keys())
-    actual_key = min(key, max_level)
-    prompt_text = SYSTEM_PROMPTS.get(f"level-{actual_key}", "Prompt not found.")
+    selected_level = next((lvl for lvl in LEVELS.values() if lvl.get("index") == key), None)
+    prompt_text = selected_level.get("system_prompt", "Prompt not found.") if selected_level else "Prompt not found."
     return {"prompt_text": prompt_text}
 
 @router.post("/change_model")
@@ -341,7 +336,7 @@ def get_chat_history(
     username = session.get("sub")
     conversation_id = session.get("conversation_id")
     if not conversation_id:
-        return []  # No conversation started yet
+        return []  # No conversation started yet.
 
     records = (
         db.query(ChatHistory)
@@ -351,11 +346,9 @@ def get_chat_history(
     )
     history = []
     for record in records:
-        # Strip the special tokens from both the prompt and reply.
         stripped_user_prompt = strip_special_tokens(record.user_prompt) if record.user_prompt else ""
         stripped_assistant_reply = strip_special_tokens(record.assistant_reply) if record.assistant_reply else ""
         
-        # Check if the record represents a system prompt by testing for the system role token.
         if record.user_prompt.startswith(SYSTEM_ROLE):
             history.append({
                 "system": stripped_user_prompt,
@@ -377,14 +370,19 @@ async def root(request: Request):
 
 @router.get("/dashboard", response_class=HTMLResponse)
 def dashboard(request: Request, response: Response, session: dict = Depends(get_session)):
-    # If get_session returns a Response object (redirect), return it
     if isinstance(session, Response):
         return session
-        
-    prompt_options = list(SYSTEM_PROMPTS.keys())
+    # Build prompt options from LEVELS sorted by index.
+    prompt_options = [lvl["name"] for lvl in sorted(LEVELS.values(), key=lambda l: l.get("index", 0))]
+    
+    # Get the current level's system prompt
+    current_level = session.get("current_level", session.get("highest_level", 1))
+    selected_level = next((lvl for lvl in LEVELS.values() if lvl.get("index") == current_level), None)
+    system_prompt = selected_level.get("system_prompt", "") if selected_level else ""
+    
     return templates.TemplateResponse("index.html", {
         "request": request,
-        "system_prompt": SYSTEM_PROMPT,
+        "system_prompt": system_prompt,
         "prompt_options": prompt_options
     })
 
@@ -400,17 +398,11 @@ def update_level(
     new_level = update.new_level
     highest_level = session.get("highest_level", 1)
 
-    # Only allow updating to levels equal to or below the highest level
     if new_level > highest_level:
         raise HTTPException(status_code=403, detail="Cannot set level higher than your current maximum level")
 
-    # Set current_level to the selected level
     session["current_level"] = new_level
-
-    # Reset conversation by creating a new conversation_id
     session["conversation_id"] = str(uuid.uuid4())
-
-    # Update the JWT cookie with the new session data
     set_auth_cookie(response, session)
     return {"msg": "Level updated", "session": session}
 
@@ -424,7 +416,6 @@ def get_level(request: Request, session: dict = Depends(get_session)):
 def get_current_level(session: dict = Depends(get_session)):
     if isinstance(session, Response):
         return session
-    # Return both current_level and highest_level
     return {
         "current_level": session.get("current_level", session.get("highest_level", 1)),
         "highest_level": session.get("highest_level", 1)
@@ -436,11 +427,35 @@ def get_config(session: dict = Depends(get_session)):
         return session
     if not session:
         raise HTTPException(status_code=403, detail="Invalid session")
-    max_level = max(int(k.split('-')[1]) for k in SYSTEM_PROMPTS.keys())
+    max_level = max(lvl.get("index", 0) for lvl in LEVELS.values())
     current_model = model.config._name_or_path
     return {
         "max_level": max_level,
         "current_model": current_model,
+    }
+
+@router.get("/levels")
+def get_levels(session: dict = Depends(get_session)):
+    if isinstance(session, Response):
+        return session
+    
+    highest_level = session.get("highest_level", 1)
+    # Get all levels, modifying locked ones
+    all_levels = [
+        {
+            "index": level["index"],
+            "name": level["name"] if level["index"] <= highest_level else f"🔒 Level {level['index']} (Locked)",
+            "description": level["description"] if level["index"] <= highest_level else "Complete the previous level to unlock this challenge!",
+            "locked": level["index"] > highest_level
+        }
+        for level in sorted(LEVELS.values(), key=lambda l: l.get("index", 0))
+    ]
+    
+    total_levels = max(level.get("index", 0) for level in LEVELS.values())
+    
+    return {
+        "levels": all_levels,
+        "total_levels": total_levels
     }
 
 ## Auth Routes ##
@@ -457,7 +472,6 @@ oauth.register(
 
 @router.post("/register")
 def register_user(user: RegisterRequest, db: Session = Depends(get_db)):
-    # Validate password using our requirements
     validate_password(user.password)
     
     existing_user = db.query(User).filter(User.username == user.username).first()
@@ -478,7 +492,6 @@ def login_native(user: LoginRequest, response: Response, db: Session = Depends(g
     if not verify_password(user.password, existing_user.password_hash):
         raise HTTPException(status_code=401, detail="Invalid credentials")
     
-    # On login, both fields are the same by default.
     token_data = {
         "sub": existing_user.username,
         "highest_level": existing_user.highest_level,
@@ -517,8 +530,6 @@ async def auth_github(request: Request, response: Response, db: Session = Depend
         db.refresh(user)
     
     redirect = RedirectResponse(url="/")
-    
-    # On login, both fields are the same by default.
     token_data = {
         "sub": user.username,
         "highest_level": user.highest_level,

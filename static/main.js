@@ -4,7 +4,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     // Default fallbacks
     let currentLevel = 1;   // The level the user wants to play
     let highestLevel = 1;   // The maximum level the user has cleared
-    let maxLevel = 3;       // The maximum level available in the system
+    let maxLevel = 1;       // The maximum level available in the system
+    let levelsData = [];    // To hold the level objects fetched from backend
 
     try {
       // Fetch both current and highest level from the server
@@ -31,6 +32,16 @@ document.addEventListener("DOMContentLoaded", async () => {
         if (promptDisplayElement) {
           promptDisplayElement.innerText = promptData.prompt_text;
         }
+      }
+
+      // Add new fetch for levels data
+      const levelsResponse = await fetch('/levels');
+      if (levelsResponse.ok) {
+          const levelsJson = await levelsResponse.json();
+          levelsData = levelsJson.levels;
+          maxLevel = levelsJson.total_levels;  // Set maxLevel from the total_levels value
+      } else {
+          console.warn("Failed to fetch levels data from /levels");
       }
     } catch (error) {
       console.warn("Failed to fetch level information:", error);
@@ -68,26 +79,28 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
     // --- End Toast Function Implementation ---
  
-    // After fetching levels, update the level selection dropdown
+    // Replace existing level selection dropdown logic
     const levelSelect = document.getElementById("systemPromptChoice");
     if (levelSelect) {
-      // Enable options up to highestLevel and grey out the others
-      for (let option of levelSelect.options) {
-        const optionLevel = parseInt(option.value);
-        if (optionLevel <= highestLevel) {
-          option.disabled = false;
-          option.textContent = option.textContent.replace(" 🔒", "");
-        } else {
-          option.disabled = true;
-          if (!option.textContent.includes("🔒")) {
-            option.textContent += " 🔒";
-          }
-        }
-      }
-      // Automatically select the option matching the current_level
-      levelSelect.value = currentLevel.toString();
+        // Clear any existing options
+        levelSelect.innerHTML = '';
+        // Sort levels by their index
+        levelsData.sort((a, b) => a.index - b.index);
+        // Create an option element for each level
+        levelsData.forEach(level => {
+            const option = document.createElement("option");
+            option.value = level.index;
+            option.textContent = level.name;
+            if (level.index > highestLevel) {
+                option.disabled = true;
+                option.textContent += " 🔒";
+            }
+            levelSelect.appendChild(option);
+        });
+        // Select the current level
+        levelSelect.value = currentLevel.toString();
     } else {
-      console.warn("levelSelect is missing.");
+        console.warn("levelSelect element not found.");
     }
   
     // Get references to other key DOM elements.
@@ -332,28 +345,4 @@ async function loadChatHistory() {
   } catch (error) {
       console.error('Error loading chat history:', error);
   }
-}
-
-async function handleRegistration(formData) {
-    try {
-        const response = await fetch('/register', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(Object.fromEntries(formData))
-        });
-        
-        const data = await response.json();
-        
-        if (response.ok) {
-            window.location.href = '/login';
-        } else {
-            // Show specific error message from the server
-            showToast(data.error || 'Registration failed', 'error');
-        }
-    } catch (error) {
-        console.error('Error during registration:', error);
-        showToast('Registration failed. Please try again.', 'error');
-    }
 }
