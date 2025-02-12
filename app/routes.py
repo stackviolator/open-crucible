@@ -198,9 +198,10 @@ def generate_text(
             max_new_tokens=request_data.max_new_tokens if request_data.max_new_tokens <= 200 else 200,
             pad_token_id=tokenizer.pad_token_id,
             do_sample=True,
-            temperature=0.7,
-            top_k=50,
-            top_p=0.9,
+            temperature=0.75,
+            top_k=40,
+            top_p=0.95,
+            repetition_penalty=1.1,
         )
     
     # Process generated tokens
