@@ -69,6 +69,8 @@ Copy `.sample.env` and configure the indicated values.
 
 Run `huggingface-cli login` and paste a HF API Token.
 
+Edit `app/levels.yaml` - and create your own levels. See `example-levels.yaml`.
+
 ### Running the Application
 
 Start the server with:
