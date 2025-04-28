@@ -87,6 +87,7 @@ document.addEventListener("DOMContentLoaded", async () => {
  
     // Build custom level selection boxes
     const levelContainer = document.getElementById("levelSelectionContainer");
+    const descriptionBox = document.getElementById("description-box"); // Reference the description-box element
     if (levelContainer) {
         // Clear any existing content
         levelContainer.innerHTML = '';
@@ -115,8 +116,12 @@ document.addEventListener("DOMContentLoaded", async () => {
                   </div>`;
                 if (level.index === currentLevel) {
                     levelBox.classList.add("selected");
+                    // Populate the description-box with the current level's description
+                    if (descriptionBox) {
+                        descriptionBox.innerText = level.description;
+                    }
                 } else {
-                    // Only add click handler if it's not the current level
+                    // Add click handler to update the description-box and change the level
                     levelBox.addEventListener("click", async () => {
                         try {
                             const response = await fetch("/update_level", {
@@ -126,6 +131,10 @@ document.addEventListener("DOMContentLoaded", async () => {
                             });
                             if (!response.ok) {
                                 throw new Error(`Server returned ${response.status}`);
+                            }
+                            // Update the description-box with the selected level's description
+                            if (descriptionBox) {
+                                descriptionBox.innerText = level.description;
                             }
                             // Reload the page so that a new conversation is started.
                             window.location.reload();
@@ -314,7 +323,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                         spread: 70,
                         origin: { y: 0.6 }
                     });
-                    showToast("another morbilly in the bank", "success");
+                    showToast("Congratulations! Successful jailbreak detected.", "success");
                     
                     // Add countdown toast
                     let countdown = 5;
