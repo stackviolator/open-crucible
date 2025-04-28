@@ -63,6 +63,12 @@ Open Crucible is a playground for experimenting with prompt injections and under
     pip install -r requirements.txt
     ```
 
+### Configuration
+
+Copy `.sample.env` and configure the indicated values.
+
+Run `huggingface-cli login` and paste a HF API Token.
+
 ### Running the Application
 
 Start the server with:

@@ -10,6 +10,7 @@ load_dotenv()
 
 CUSTOM_PAD_TOKEN = "[PAD]"
 
+
 # Function to load levels from a YAML file.
 def load_levels_from_yaml(file_path="app/levels.yaml"):
     with open(file_path, "r") as f:
@@ -18,10 +19,12 @@ def load_levels_from_yaml(file_path="app/levels.yaml"):
     levels = {level["name"]: level for level in data.get("levels", [])}
     return levels
 
+
 LEVELS = load_levels_from_yaml(os.getenv("LEVELS_FILE"))
 
 model = None
 tokenizer = None
+
 
 def load_model(model_name: str):
     global model, tokenizer
@@ -47,9 +50,7 @@ def load_model(model_name: str):
         print(f"Set pad token ID to: {tokenizer.pad_token_id}")
 
     model = AutoModelForCausalLM.from_pretrained(
-        model_name,
-        torch_dtype=torch.float16,
-        device_map="auto"
+        model_name, torch_dtype=torch.float16, device_map="auto"
     )
 
     # Update the model's config with the pad token id.
@@ -63,7 +64,8 @@ def load_model(model_name: str):
     print(f"Pad token is now: {tokenizer.pad_token} (ID: {tokenizer.pad_token_id})")
     return model
 
-# My CUDA machine is itty bitty so I use the 4-bit quantized model. 
+
+# My CUDA machine is itty bitty so I use the 4-bit quantized model.
 # My mac is bigger so then I use the 16-bit model.
 if torch.cuda.is_available():
     DEFAULT_MODEL_NAME = "unsloth/Meta-Llama-3.1-8B-bnb-4bit"
