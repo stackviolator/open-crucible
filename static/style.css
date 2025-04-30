@@ -379,6 +379,10 @@ select.styled-input {
   background-color: #dc3545;
 }
 
+.toast.failure {
+  background-color: #dc3545;
+}
+
 .toast.info {
   background-color: #17a2b8;
 }

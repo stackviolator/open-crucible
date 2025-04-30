@@ -270,6 +270,13 @@ document.addEventListener("DOMContentLoaded", async () => {
                 
                 const data = await response.json();
                 
+                // Handle jailbreak detection
+                if (data.jailbreak_detected) {
+                    showToast("Jailbreak detected!", "failure");
+                    waitingBubble.remove();
+                    return;
+                }
+
                 // Remove the waiting bubble before displaying the real response
                 waitingBubble.remove();
                 

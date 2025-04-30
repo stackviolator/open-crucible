@@ -13,7 +13,14 @@ from fastapi.templating import Jinja2Templates
 from sqlalchemy import create_engine, Column, Integer, String
 from sqlalchemy.orm import sessionmaker, declarative_base, Session
 
-from app.models import model, tokenizer, LEVELS, load_model
+from app.models import (
+    model,
+    tokenizer,
+    LEVELS,
+    load_model,
+    classifier_tokenizer,
+    classifier_model,
+)
 from app.schemas import (
     GenerationRequest,
     ChangeModelRequest,
@@ -279,22 +286,71 @@ def generate_text(
         print("DEBUG: Generated text only:", generated_text_only)
 
     # --- Jailbreak Check and Level Update ---
-    lower_text = generated_text_only.lower()
+    lower_output_text = generated_text_only.lower()
+    lower_input_text = request_data.user_prompt.lower()
     flag_pattern = selected_level.get(
         "flag_pattern", None
     )  # Retrieve the "flag" value from the level content
+    output_blacklist_pattern = selected_level.get("guardrails", {}).get(
+        "output_blacklist_pattern", None
+    )
+    input_blacklist_pattern = selected_level.get("guardrails", {}).get(
+        "input_blacklist_pattern", None
+    )
 
     jailbreak_success = False
+    blacklist_violation = False
+
     if flag_pattern:
         try:
-            # Use regex to check if the flag pattern is present in the generated text
             jailbreak_success = (
-                re.search(flag_pattern, lower_text, flags=re.IGNORECASE) is not None
+                re.search(flag_pattern, lower_output_text, flags=re.IGNORECASE)
+                is not None
             )
         except re.error as regex_error:
             logging.warning(
                 f"Invalid regex pattern for flag: {flag_pattern}. Error: {regex_error}"
             )
+
+    if output_blacklist_pattern:
+        try:
+            blacklist_violation = (
+                re.search(
+                    output_blacklist_pattern, lower_output_text, flags=re.IGNORECASE
+                )
+                is not None
+            )
+        except re.error as regex_error:
+            logging.warning(
+                f"Invalid regex pattern for blacklist: {output_blacklist_pattern}. Error: {regex_error}"
+            )
+
+    if input_blacklist_pattern:
+        try:
+            blacklist_violation = (
+                re.search(
+                    input_blacklist_pattern, lower_input_text, flags=re.IGNORECASE
+                )
+                is not None
+            )
+        except re.error as regex_error:
+            logging.warning(
+                f"Invalid regex pattern for blacklist: {input_blacklist_pattern}. Error: {regex_error}"
+            )
+
+    # If a blacklist violation is detected, log it and return an error response
+    if blacklist_violation:
+        logging.warning(f"Blacklist violation detected: {generated_text_only}")
+        return {
+            "system_prompt": session.get("highest_level"),
+            "combined_prompt": final_prompt,
+            "generated_text_only": generated_text_only,
+            "jailbreak_success": False,
+            "jailbreak_detected": True,
+            "blacklist_violation": blacklist_violation,
+            "user_tokens": user_input_tokens,  # Token information.
+            "output_tokens": output_tokens,  # Token information.
+        }
 
     try:
         if jailbreak_success and level_number >= session.get("highest_level", 0):
@@ -352,6 +408,8 @@ def generate_text(
         "combined_prompt": final_prompt,
         "generated_text_only": generated_text_only,
         "jailbreak_success": jailbreak_success,
+        "jailbreak_detected": False,
+        "blacklist_violation": None,
         "user_tokens": user_input_tokens,  # Token information.
         "output_tokens": output_tokens,  # Token information.
     }
