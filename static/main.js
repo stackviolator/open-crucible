@@ -273,7 +273,16 @@ document.addEventListener("DOMContentLoaded", async () => {
                 // Handle jailbreak detection
                 if (data.jailbreak_detected) {
                     showToast("Jailbreak detected!", "failure");
+
+                    // Remove the user's message bubble
+                    const userBubbles = chatHistoryElement.getElementsByClassName('chat-message user');
+                    if (userBubbles.length > 0) {
+                        chatHistoryElement.removeChild(userBubbles[userBubbles.length - 1]);
+                    }
+
+                    // Remove the waiting bubble
                     waitingBubble.remove();
+
                     return;
                 }
 
