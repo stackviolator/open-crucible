@@ -140,6 +140,12 @@ document.addEventListener("DOMContentLoaded", async () => {
                         // Hide the guardrails section if there are no guardrails
                         guardrailsSection.style.display = "none";
                     }
+                    // Handle manual flag requirement
+                    if (level.manual_flag_required) {
+                        // show flag submission section
+                        const flagSubmissionSection = document.getElementById("flagSubmissionSection");
+                        flagSubmissionSection.classList.remove("hidden");
+                    }
                 } else {
                     // Add click handler to update the description-box and change the level
                     levelBox.addEventListener("click", async () => {
@@ -243,6 +249,11 @@ document.addEventListener("DOMContentLoaded", async () => {
             }
         });
     }
+
+    // Reference to the flag submission section and button
+    
+    const flagInput = document.getElementById("flagInput");
+    const submitFlagBtn = document.getElementById("submitFlagBtn");
 
     // Chat send button
     const chatSendBtn = document.getElementById('chatSendBtn');
@@ -381,6 +392,68 @@ document.addEventListener("DOMContentLoaded", async () => {
                 waitingBubble.remove();
                 console.error("Error during generation:", error);
                 showToast("Error generating text", "error");
+            }
+        });
+    }
+
+    // Handle flag submission
+    if (submitFlagBtn) {
+        submitFlagBtn.addEventListener("click", async () => {
+            const flag = flagInput.value.trim();
+            if (!flag) {
+                showToast("Please enter a flag.", "error");
+                return;
+            }
+
+            // Disable the button to prevent multiple submissions
+            submitFlagBtn.disabled = true;
+            showToast("Submitting flag...", "info");
+
+            const payload = {
+                flag: flag,
+            };
+
+            try {
+                const response = await fetch("/submit_flag", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(payload)
+                });
+
+                // Parse the response body as JSON
+                const responseData = await response.json();
+
+                if (responseData.success === "true") { // Check success as a string
+                    confetti({
+                        particleCount: 150,
+                        spread: 70,
+                        origin: { y: 0.6 }
+                    });
+                    showToast("Congratulations! Successful jailbreak detected.", "success");
+
+                    // Add countdown toast
+                    let countdown = 5;
+                    const countdownInterval = setInterval(() => {
+                        showToast(`Page will reset in ${countdown - 1} seconds...`, "info");
+                        countdown--;
+                        if (countdown < 0) {
+                            clearInterval(countdownInterval);
+                        }
+                    }, 1000);
+
+                    // Add page refresh after 5 seconds
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 5000);
+                } else {
+                    showToast(responseData.message || "Invalid flag. Please try again.", "error");
+                }
+            } catch (error) {
+                console.error("Error submitting flag:", error);
+                showToast("An error occurred while submitting the flag. Please try again.", "error");
+            } finally {
+                // Re-enable the button after the request is complete
+                submitFlagBtn.disabled = false;
             }
         });
     }

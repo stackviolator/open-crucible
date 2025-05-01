@@ -7,7 +7,7 @@ import logging
 from datetime import datetime
 
 import torch
-from fastapi import Request, Response, Depends, APIRouter, HTTPException
+from fastapi import Request, Response, Depends, APIRouter, HTTPException, Body
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy import create_engine, Column, Integer, String
@@ -23,6 +23,7 @@ from app.models import (
 )
 from app.schemas import (
     GenerationRequest,
+    FlagRequest,
     ChangeModelRequest,
     RegisterRequest,
     LoginRequest,
@@ -151,6 +152,21 @@ def validate_password(password: str):
         raise HTTPException(
             status_code=400, detail="Password cannot be longer than 128 characters."
         )
+
+
+def redact_flag(text: str, flag_pattern: str) -> str:
+    """
+    Redacts the flag from a given string using the provided regex pattern.
+    """
+    if not flag_pattern:
+        return text
+    try:
+        return re.sub(flag_pattern, "[REDACTED]", text, flags=re.IGNORECASE)
+    except re.error as regex_error:
+        logging.warning(
+            f"Invalid regex pattern for flag redaction: {flag_pattern}. Error: {regex_error}"
+        )
+        return text
 
 
 # --- Generate Text Endpoint ---
@@ -297,6 +313,9 @@ def generate_text(
     input_blacklist_pattern = selected_level.get("guardrails", {}).get(
         "input_blacklist_pattern", None
     )
+    manual_flag_required = selected_level.get("guardrails", {}).get(
+        "manual_flag_required", False
+    )
 
     jailbreak_success = False
     blacklist_violation = False
@@ -350,6 +369,18 @@ def generate_text(
             "blacklist_violation": blacklist_violation,
             "user_tokens": user_input_tokens,  # Token information.
             "output_tokens": output_tokens,  # Token information.
+        }
+
+    # If the level has an output blacklist pattern or similar guardrail, skip automatic jailbreak detection
+    if manual_flag_required:
+        return {
+            "system_prompt": session.get("highest_level"),
+            "combined_prompt": final_prompt,
+            "generated_text_only": generated_text_only,
+            "manual_flag_required": True,  # Indicate that manual flag submission is required
+            "blacklist_violation": None,
+            "user_tokens": user_input_tokens,
+            "output_tokens": output_tokens,
         }
 
     try:
@@ -415,6 +446,71 @@ def generate_text(
     }
 
 
+# ...existing code...
+
+
+@router.post("/submit_flag")
+def submit_flag(
+    request_data: FlagRequest,
+    request: Request,
+    response: Response,
+    session: dict = Depends(get_session),
+    db: Session = Depends(get_db),
+):
+    """
+    Verify the submitted flag for the current level.
+    """
+    if isinstance(session, Response):
+        return session
+
+    current_level = session.get("current_level", 1)
+    selected_level = next(
+        (lvl for lvl in LEVELS.values() if lvl.get("index") == current_level), None
+    )
+
+    if not selected_level:
+        raise HTTPException(status_code=400, detail="Invalid level.")
+
+    flag_pattern = selected_level.get("flag_pattern", None)
+    if not flag_pattern:
+        raise HTTPException(
+            status_code=400, detail="No flag pattern defined for this level."
+        )
+
+    # Verify the flag against the pattern
+    try:
+        if re.fullmatch(flag_pattern, request_data.flag):
+            # Update the user's highest level if the flag is correct
+            new_level = max(session.get("highest_level", 1), current_level + 1)
+            user = db.query(User).filter(User.username == session["sub"]).first()
+            if user:
+                user.highest_level = new_level
+                db.commit()
+                token_data = {"sub": user.username, "highest_level": new_level}
+                session.update(token_data)
+                set_auth_cookie(response, token_data)
+
+            # Reset conversation after level up
+            session["conversation_id"] = str(uuid.uuid4())
+
+            return {
+                "message": "Flag verified successfully. Level up!",
+                "new_level": new_level,
+                "success": "true",
+            }
+        else:
+            return {
+                "message": "Invalid flag. Please try again.",
+            }
+    except re.error as regex_error:
+        logging.warning(
+            f"Invalid regex pattern for flag verification: {flag_pattern}. Error: {regex_error}"
+        )
+        raise HTTPException(
+            status_code=500, detail="Error processing the flag. Please try again later."
+        )
+
+
 @router.get("/get_prompt")
 def get_prompt(key: int, session: dict = Depends(get_session)):
     """
@@ -427,12 +523,14 @@ def get_prompt(key: int, session: dict = Depends(get_session)):
     selected_level = next(
         (lvl for lvl in LEVELS.values() if lvl.get("index") == key), None
     )
-    prompt_text = (
-        selected_level.get("system_prompt", "Prompt not found.")
-        if selected_level
-        else "Prompt not found."
-    )
-    return {"prompt_text": prompt_text}
+    if not selected_level:
+        return {"prompt_text": "Prompt not found."}
+
+    system_prompt = selected_level.get("system_prompt", "Prompt not found.")
+    flag_pattern = selected_level.get("flag_pattern", None)
+    redacted_prompt = redact_flag(system_prompt, flag_pattern)
+
+    return {"prompt_text": redacted_prompt}
 
 
 @router.post("/change_model")
@@ -637,6 +735,7 @@ def get_levels(session: dict = Depends(get_session)):
             "guardrails": level.get(
                 "guardrails", None
             ),  # Fetch guardrails or default to None
+            "manual_flag_required": level.get("manual_flag_required", False),
             "difficulty": (
                 "Completed"
                 if level["index"] < highest_level
