@@ -16,3 +16,4 @@ starlette
 itsdangerous
 pyyaml>=6.0.1
 huggingface_hub[cli]
+markdown
