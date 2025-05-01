@@ -3,7 +3,7 @@
 import os
 import re
 import uuid
-import logging
+import markdown
 from datetime import datetime
 
 import torch
@@ -18,6 +18,7 @@ from app.models import (
     tokenizer,
     LEVELS,
     load_model,
+    RESOURCES,
 )
 from app.schemas import (
     GenerationRequest,
@@ -165,6 +166,22 @@ def redact_flag(text: str, flag_pattern: str) -> str:
             f"Invalid regex pattern for flag redaction: {flag_pattern}. Error: {regex_error}"
         )
         return text
+
+
+@router.get("/learning-resources/{resource_id}", response_class=HTMLResponse)
+async def learning_resource_page(request: Request, resource_id: str):
+    # Find the resource by ID
+    resource = next((r for r in RESOURCES["resources"] if r["id"] == resource_id), None)
+    if not resource:
+        return HTMLResponse(content="Resource not found", status_code=404)
+
+    # Convert Markdown content to HTML for each section
+    for section in resource["sections"]:
+        section["content"] = markdown.markdown(section["content"])
+
+    return templates.TemplateResponse(
+        "resource.html", {"request": request, "resource": resource}
+    )
 
 
 # --- Generate Text Endpoint ---

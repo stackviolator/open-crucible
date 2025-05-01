@@ -778,3 +778,8 @@ select.styled-input {
       transform: translateY(-10px);
   }
 }
+
+.button-container {
+  text-align: center; /* Centers the content horizontally */
+  margin-top: 20px;   /* Adds some spacing above the button */
+}

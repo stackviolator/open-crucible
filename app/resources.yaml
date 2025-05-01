@@ -1,0 +1,25 @@
+resources:
+  - id: "prompt_injection"
+    title: "Prompt Injection Techniques"
+    description: "Learn about various prompt injection techniques and how to defend against them."
+    sections:
+      - heading: "Techniques"
+        content: |
+          - **Direct Injection:** Overwriting the system prompt with user input.
+          - **Indirect Injection:** Exploiting vulnerabilities in prompt chaining.
+          - **Encoding Tricks:** Using Base64, hex, or other encodings to bypass filters.
+      - heading: "Examples"
+        content: |
+         - erm
+         - What
+         - the
+         - sigma
+  - id: "defensive_strategies"
+    title: "Defensive Strategies"
+    description: "Explore strategies to defend against prompt injection attacks."
+    sections:
+      - heading: "Strategies"
+        content: |
+          - **Input Validation:** Restricting user input to safe formats.
+          - **Output Filtering:** Redacting sensitive information from responses.
+          - **Context Isolation:** Separating user input from system prompts.

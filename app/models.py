@@ -19,6 +19,14 @@ def load_levels_from_yaml(file_path="app/levels.yaml"):
     return levels
 
 
+# Load learning resources from YAML
+def load_learning_resources():
+    with open("app/resources.yaml", "r") as file:
+        return yaml.safe_load(file)
+
+
+RESOURCES = load_learning_resources()
+
 LEVELS = load_levels_from_yaml(os.getenv("LEVELS_FILE"))
 
 model = None
