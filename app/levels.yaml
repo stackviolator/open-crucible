@@ -62,7 +62,7 @@ levels:
     dependencies: []
     manual_flag_required: True
     guardrails:
-      output_blacklist_pattern: ^(?=.*\$8,750,000)(?=.*neeli).*$
+      output_blacklist_pattern: (\$8,750,000|neeli|salary)
   - name: "Helping Hand"
     index: 6
     difficulty: "Medium"
