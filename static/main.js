@@ -6,43 +6,43 @@ document.addEventListener("DOMContentLoaded", async () => {
     let levelsData = [];    // To hold the level objects fetched from backend
 
     try {
-      // Fetch both current and highest level from the server
-      const levelResponse = await fetch('/get_current_level');
-      if (levelResponse.ok) {
-        const levelData = await levelResponse.json();
-        // Add validation for current_level and highest_level
-        currentLevel = parseInt(levelData.current_level);
-        highestLevel = parseInt(levelData.highest_level);
-      }
-      
-      // Fetch configuration, including the system's max level
-      const configResponse = await fetch('/config');
-      if (configResponse.ok) {
-        const configData = await configResponse.json();
-        maxLevel = parseInt(configData.max_level);
-      }
-
-      // Fetch and display the initial prompt for the current level
-      const promptResponse = await fetch(`/get_prompt?key=${currentLevel}`);
-      if (promptResponse.ok) {
-        const promptData = await promptResponse.json();
-        const promptDisplayElement = document.querySelector(".prompt-box");
-        if (promptDisplayElement) {
-          promptDisplayElement.innerText = promptData.prompt_text;
+        // Fetch both current and highest level from the server
+        const levelResponse = await fetch('/get_current_level');
+        if (levelResponse.ok) {
+            const levelData = await levelResponse.json();
+            // Add validation for current_level and highest_level
+            currentLevel = parseInt(levelData.current_level);
+            highestLevel = parseInt(levelData.highest_level);
         }
-      }
 
-      // Add new fetch for levels data
-      const levelsResponse = await fetch('/levels');
-      if (levelsResponse.ok) {
-          const levelsJson = await levelsResponse.json();
-          levelsData = levelsJson.levels;
-          maxLevel = levelsJson.total_levels;  // Set maxLevel from the total_levels value
-      } else {
-          console.warn("Failed to fetch levels data from /levels");
-      }
+        // Fetch configuration, including the system's max level
+        const configResponse = await fetch('/config');
+        if (configResponse.ok) {
+            const configData = await configResponse.json();
+            maxLevel = parseInt(configData.max_level);
+        }
+
+        // Fetch and display the initial prompt for the current level
+        const promptResponse = await fetch(`/get_prompt?key=${currentLevel}`);
+        if (promptResponse.ok) {
+            const promptData = await promptResponse.json();
+            const promptDisplayElement = document.querySelector(".prompt-box");
+            if (promptDisplayElement) {
+                promptDisplayElement.innerText = promptData.prompt_text;
+            }
+        }
+
+        // Add new fetch for levels data
+        const levelsResponse = await fetch('/levels');
+        if (levelsResponse.ok) {
+            const levelsJson = await levelsResponse.json();
+            levelsData = levelsJson.levels;
+            maxLevel = levelsJson.total_levels;  // Set maxLevel from the total_levels value
+        } else {
+            console.warn("Failed to fetch levels data from /levels");
+        }
     } catch (error) {
-      console.warn("Failed to fetch level information:", error);
+        console.warn("Failed to fetch level information:", error);
     }
 
     // Update the progress bar using highestLevel (to reflect cleared progress)
@@ -50,41 +50,41 @@ document.addEventListener("DOMContentLoaded", async () => {
     const progressPercentage = ((highestLevel - 1) / maxLevel) * 100;
     const progressBar = document.querySelector('.progress-bar');
     if (progressBar && progressBarContainer) {
-      progressBar.style.width = `${progressPercentage}%`;
-      progressBarContainer.setAttribute('data-text', `${highestLevel - 1}/${maxLevel}`);
+        progressBar.style.width = `${progressPercentage}%`;
+        progressBarContainer.setAttribute('data-text', `${highestLevel - 1}/${maxLevel}`);
     }
-    
+
     // Define the pastel color palette for token visualizations.
     const defaultTokenColors = [
-      "#FFD1DC", // pastel pink
-      "#C5E3BF", // pastel green
-      "#FFFFCC", // pastel yellow
-      "#FFEBCC"  // pastel peach
+        "#FFD1DC", // pastel pink
+        "#C5E3BF", // pastel green
+        "#FFFFCC", // pastel yellow
+        "#FFEBCC"  // pastel peach
     ];
 
     // Add difficulty colors definition
     const difficultyColors = {
-      "Easy": "#28a745",    // green
-      "Medium": "#fd7e14",  // orange
-      "Hard": "#dc3545",    // red
-      "Completed": "#9b59b6" // purple
+        "Easy": "#28a745",    // green
+        "Medium": "#fd7e14",  // orange
+        "Hard": "#dc3545",    // red
+        "Completed": "#9b59b6" // purple
     };
-  
+
     // --- Toast Function Implementation ---
     function showToast(message, type = "info") {
-      const toast = document.createElement("div");
-      toast.className = `toast ${type}`;
-      toast.innerText = message;
-      document.body.appendChild(toast);
-      setTimeout(() => {
-        toast.classList.add("fade-out");
+        const toast = document.createElement("div");
+        toast.className = `toast ${type}`;
+        toast.innerText = message;
+        document.body.appendChild(toast);
         setTimeout(() => {
-          document.body.removeChild(toast);
-        }, 500);
-      }, 3000);
+            toast.classList.add("fade-out");
+            setTimeout(() => {
+                document.body.removeChild(toast);
+            }, 500);
+        }, 3000);
     }
     // --- End Toast Function Implementation ---
- 
+
     // Build custom level selection boxes
     const levelContainer = document.getElementById("levelSelectionContainer");
     const descriptionBox = document.getElementById("description-box"); // Reference the description-box element
@@ -106,8 +106,8 @@ document.addEventListener("DOMContentLoaded", async () => {
                     Difficulty: Unknown 🔒
                   </div>`;
             } else {
-                const diffColor = level.index < currentLevel ? 
-                    difficultyColors["Completed"] : 
+                const diffColor = level.index < currentLevel ?
+                    difficultyColors["Completed"] :
                     difficultyColors[level.difficulty] || "#ccc";
                 levelBox.innerHTML = `
                   <div class="level-name">${level.name}</div>
@@ -120,13 +120,33 @@ document.addEventListener("DOMContentLoaded", async () => {
                     if (descriptionBox) {
                         descriptionBox.innerText = level.description;
                     }
+                    // Populate the guardrails-box with the current level's guardrails
+                    const guardrailsBox = document.getElementById("guardrails-box");
+                    const guardrailsSection = document.getElementById("guardrails-section");
+                    if (level.guardrails) {
+
+                        // Build the guardrails content as a single string
+                        let guardrailsContent = '';
+                        for (const [key, value] of Object.entries(level.guardrails)) {
+                            guardrailsContent += `${key}: ${value}\n`;
+                        }
+
+                        // Set the content to the guardrails-box
+                        guardrailsBox.innerText = guardrailsContent;
+
+                        // Ensure the guardrails section is visible
+                        guardrailsSection.style.display = "block";
+                    } else {
+                        // Hide the guardrails section if there are no guardrails
+                        guardrailsSection.style.display = "none";
+                    }
                 } else {
                     // Add click handler to update the description-box and change the level
                     levelBox.addEventListener("click", async () => {
                         try {
                             const response = await fetch("/update_level", {
                                 method: "POST",
-                                headers: {"Content-Type": "application/json"},
+                                headers: { "Content-Type": "application/json" },
                                 body: JSON.stringify({ new_level: level.index })
                             });
                             if (!response.ok) {
@@ -148,30 +168,30 @@ document.addEventListener("DOMContentLoaded", async () => {
             levelContainer.appendChild(levelBox);
         });
     }
-  
+
     // Add toggle functionality for level selection
     const levelHeader = document.getElementById("levelSelectionHeader");
     const toggleIcon = document.getElementById("levelToggleIcon");
     if (levelHeader && levelContainer && toggleIcon) {
         // Get saved state from localStorage, default to collapsed (false)
         const isExpanded = localStorage.getItem('levelSelectExpanded') === 'true';
-        
+
         // Set initial state based on saved preference
-        toggleIcon.innerHTML = isExpanded 
+        toggleIcon.innerHTML = isExpanded
             ? '<i class="fa-solid fa-chevron-down"></i>'
             : '<i class="fa-solid fa-chevron-up"></i>';
-        
+
         if (isExpanded) {
             levelContainer.classList.add('active');
         }
-        
+
         levelHeader.addEventListener("click", () => {
             levelContainer.classList.toggle('active');
             const isNowExpanded = levelContainer.classList.contains('active');
-            
+
             // Save state to localStorage
             localStorage.setItem('levelSelectExpanded', isNowExpanded);
-            
+
             toggleIcon.innerHTML = isNowExpanded
                 ? '<i class="fa-solid fa-chevron-down"></i>'
                 : '<i class="fa-solid fa-chevron-up"></i>';
@@ -199,13 +219,13 @@ document.addEventListener("DOMContentLoaded", async () => {
             }
         });
     }
-  
+
     // Get references to other key DOM elements.
     const modelChoiceElem = document.getElementById("modelChoice");
-  
+
     if (!modelChoiceElem) {
-      console.error("Element with id 'modelChoice' not found.");
-      return;
+        console.error("Element with id 'modelChoice' not found.");
+        return;
     }
 
     // Load chat history
@@ -231,18 +251,18 @@ document.addEventListener("DOMContentLoaded", async () => {
             const chatInput = document.getElementById('chatInput');
             const userMessage = chatInput.value.trim();
             if (!userMessage) return;
-            
+
             // Append the user's message to the chat history
             const chatHistoryElement = document.getElementById('chatHistory');
             const userBubble = document.createElement('div');
             userBubble.className = 'chat-message user';
             userBubble.textContent = userMessage;
             chatHistoryElement.appendChild(userBubble);
-            
+
             // Get model settings
             const modelChoice = document.getElementById("modelChoice").value;
             const maxTokens = parseInt(document.getElementById('maxTokens').value) || 100;
-            
+
             const payload = {
                 user_prompt: userMessage,
                 max_new_tokens: maxTokens,
@@ -260,16 +280,16 @@ document.addEventListener("DOMContentLoaded", async () => {
             waitingBubble.innerHTML = '<span class="dot">.</span><span class="dot">.</span><span class="dot">.</span>';
             chatHistoryElement.appendChild(waitingBubble);
             chatHistoryElement.scrollTop = chatHistoryElement.scrollHeight;
-            
+
             try {
                 const response = await fetch("/generate", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify(payload)
                 });
-                
+
                 const data = await response.json();
-                
+
                 // Handle jailbreak detection
                 if (data.jailbreak_detected) {
                     showToast("Jailbreak detected!", "failure");
@@ -288,14 +308,14 @@ document.addEventListener("DOMContentLoaded", async () => {
 
                 // Remove the waiting bubble before displaying the real response
                 waitingBubble.remove();
-                
+
                 // Append the assistant's reply as a chat bubble
                 const assistantBubble = document.createElement('div');
                 assistantBubble.className = 'chat-message assistant';
                 assistantBubble.textContent = data.generated_text_only;
                 chatHistoryElement.appendChild(assistantBubble);
                 chatHistoryElement.scrollTop = chatHistoryElement.scrollHeight;
-                
+
                 // Optionally update additional info elements if they exist
                 const combinedPromptElem = document.getElementById("displayCombinedPrompt");
                 if (combinedPromptElem) {
@@ -329,9 +349,9 @@ document.addEventListener("DOMContentLoaded", async () => {
                         outputTokenDisplay.appendChild(tokenSpan);
                     });
                 }
-                
+
                 showToast("Text generated successfully!", "success");
-      
+
                 // Handle jailbreak success if present
                 if (data.jailbreak_success) {
                     confetti({
@@ -340,7 +360,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                         origin: { y: 0.6 }
                     });
                     showToast("Congratulations! Successful jailbreak detected.", "success");
-                    
+
                     // Add countdown toast
                     let countdown = 5;
                     const countdownInterval = setInterval(() => {
@@ -364,38 +384,38 @@ document.addEventListener("DOMContentLoaded", async () => {
             }
         });
     }
-  
+
     // Event listener for model selection change (unchanged).
     modelChoiceElem.addEventListener("change", async (event) => {
-      const selectedUUID = event.target.value;
-      const modelText = event.target.options[event.target.selectedIndex].text;
-      const spinner = document.getElementById("modelSpinner");
-      if (spinner) spinner.classList.remove("hidden");
-      showToast("Changing model...", "info");
-  
-      try {
-        const response = await fetch("/change_model", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ model_uuid: selectedUUID })
-        });
-        const data = await response.json();
-        
-        if (data.status === "success") {
-          showToast("Model changed to " + data.model_name, "success");
-          console.log("Model changed to", data.model_name);
-        } else {
-          showToast("Error changing model to: " + modelText, "error");
-          console.error("Error changing model:", data.error);
+        const selectedUUID = event.target.value;
+        const modelText = event.target.options[event.target.selectedIndex].text;
+        const spinner = document.getElementById("modelSpinner");
+        if (spinner) spinner.classList.remove("hidden");
+        showToast("Changing model...", "info");
+
+        try {
+            const response = await fetch("/change_model", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ model_uuid: selectedUUID })
+            });
+            const data = await response.json();
+
+            if (data.status === "success") {
+                showToast("Model changed to " + data.model_name, "success");
+                console.log("Model changed to", data.model_name);
+            } else {
+                showToast("Error changing model to: " + modelText, "error");
+                console.error("Error changing model:", data.error);
+            }
+        } catch (error) {
+            showToast("Error changing model to: " + modelText, "error");
+            console.error("Error during model change request:", error);
+        } finally {
+            if (spinner) spinner.classList.add("hidden");
         }
-      } catch (error) {
-        showToast("Error changing model to: " + modelText, "error");
-        console.error("Error during model change request:", error);
-      } finally {
-        if (spinner) spinner.classList.add("hidden");
-      }
     });
-  });
+});
 
 async function logout() {
     try {
@@ -405,7 +425,7 @@ async function logout() {
                 'Content-Type': 'application/json'
             }
         });
-        
+
         if (response.ok) {
             window.location.href = '/login';
         } else {
@@ -419,37 +439,37 @@ async function logout() {
 
 // Function to load the chat history
 async function loadChatHistory() {
-  try {
-      const response = await fetch('/chat_history');
-      if (response.ok) {
-          const chatData = await response.json();
-          const chatHistoryElement = document.getElementById('chatHistory');
-          if (chatHistoryElement) {
-              // Clear any existing content
-              chatHistoryElement.innerHTML = '';
-              chatData.forEach(chatItem => {
-                  // If there is a user prompt, display it
-                  if (chatItem.user) {
-                      const userBubble = document.createElement('div');
-                      userBubble.className = 'chat-message user';
-                      userBubble.textContent = chatItem.user;
-                      chatHistoryElement.appendChild(userBubble);
-                  }
-                  // If there is an assistant reply, display it
-                  if (chatItem.assistant) {
-                      const assistantBubble = document.createElement('div');
-                      assistantBubble.className = 'chat-message assistant';
-                      assistantBubble.textContent = chatItem.assistant;
-                      chatHistoryElement.appendChild(assistantBubble);
-                  }
-              });
-              // Optional: scroll to the bottom of the chat history
-              chatHistoryElement.scrollTop = chatHistoryElement.scrollHeight;
-          }
-      } else {
-          console.error('Failed to fetch chat history. Status:', response.status);
-      }
-  } catch (error) {
-      console.error('Error loading chat history:', error);
-  }
+    try {
+        const response = await fetch('/chat_history');
+        if (response.ok) {
+            const chatData = await response.json();
+            const chatHistoryElement = document.getElementById('chatHistory');
+            if (chatHistoryElement) {
+                // Clear any existing content
+                chatHistoryElement.innerHTML = '';
+                chatData.forEach(chatItem => {
+                    // If there is a user prompt, display it
+                    if (chatItem.user) {
+                        const userBubble = document.createElement('div');
+                        userBubble.className = 'chat-message user';
+                        userBubble.textContent = chatItem.user;
+                        chatHistoryElement.appendChild(userBubble);
+                    }
+                    // If there is an assistant reply, display it
+                    if (chatItem.assistant) {
+                        const assistantBubble = document.createElement('div');
+                        assistantBubble.className = 'chat-message assistant';
+                        assistantBubble.textContent = chatItem.assistant;
+                        chatHistoryElement.appendChild(assistantBubble);
+                    }
+                });
+                // Optional: scroll to the bottom of the chat history
+                chatHistoryElement.scrollTop = chatHistoryElement.scrollHeight;
+            }
+        } else {
+            console.error('Failed to fetch chat history. Status:', response.status);
+        }
+    } catch (error) {
+        console.error('Error loading chat history:', error);
+    }
 }

@@ -634,6 +634,9 @@ def get_levels(session: dict = Depends(get_session)):
                 if level["index"] <= highest_level
                 else "Complete the previous level to unlock this challenge!"
             ),
+            "guardrails": level.get(
+                "guardrails", None
+            ),  # Fetch guardrails or default to None
             "difficulty": (
                 "Completed"
                 if level["index"] < highest_level
