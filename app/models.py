@@ -21,7 +21,9 @@ def load_levels_from_yaml(file_path="app/levels.yaml"):
 
 # Load learning resources from YAML
 def load_learning_resources():
-    with open("app/resources.yaml", "r") as file:
+    with open(
+        "app/resources.yaml", "r", encoding="utf-8"
+    ) as file:  # Specify UTF-8 encoding
         return yaml.safe_load(file)
 
 
