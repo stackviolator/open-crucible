@@ -66,20 +66,6 @@ def load_model(model_name: str):
     return model
 
 
-def load_classifier_model(model_name: str = "meta-llama/Llama-Guard-3-8B"):
-    """
-    Loads a classifier model and tokenizer such as llama guard for use in specific levels.
-    """
-    global classifier_model, classifier_tokenizer
-    print("Loading classifier model...")
-    classifier_tokenizer = AutoTokenizer.from_pretrained(model_name)
-    classifier_model = AutoModelForCausalLM.from_pretrained(
-        model_name, torch_dtype=torch.float16, device_map="auto"
-    )
-    print("Classifier model loaded.")
-    return classifier_model
-
-
 # My CUDA machine is itty bitty so I use the 4-bit quantized model.
 # My mac is bigger so then I use the 16-bit model.
 if torch.cuda.is_available():
@@ -90,6 +76,3 @@ else:
 print("Loading default model...")
 load_model(DEFAULT_MODEL_NAME)
 print("Default model loaded.")
-
-# Load the classifier model during initialization
-load_classifier_model()
