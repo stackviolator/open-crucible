@@ -4,6 +4,7 @@ import os
 import re
 import uuid
 import markdown
+import logging
 from datetime import datetime
 
 import torch
