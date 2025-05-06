@@ -2,6 +2,7 @@
 
 <!DOCTYPE html>
 <html>
+
 <head>
   <meta charset="utf-8" />
   <title>Open Crucible</title>
@@ -9,6 +10,7 @@
   <link rel="stylesheet" href="/static/style.css" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 </head>
+
 <body>
   <!-- Top Bar -->
   <div class="top-bar">
@@ -18,12 +20,17 @@
       <button class="btn-home" onclick="window.location.href='/';">
         Open Crucible
       </button>
+      <button onclick="window.location.href='/learning-resources/prompt_injection'" class="btn-home">
+        Prompt Injection Techniques
+      </button>
+      <button onclick="window.location.href='/learning-resources/defensive_strategies'" class="btn-home">
+        Defensive Strategies
+      </button>
     </div>
     <div class="top-bar-right">
       <button class="btn-top" onclick="window.location.href='https://magic-box.dev';">
         Magic Box Blog
       </button>
-      <!-- Additional top bar buttons if needed -->
     </div>
   </div>
 
@@ -47,7 +54,7 @@
         </section>
       </div>
     </div>
-    
+
     <!-- Add the logout button at the bottom of the sidebar -->
     <div class="sidebar-footer">
       <button onclick="logout()" class="logout-btn">
@@ -59,7 +66,7 @@
   <!-- Main container for content (only shown after login in a real app) -->
   <div class="container" id="mainContent">
     <h1>We ❤️ Open Crucible 😊</h1>
-    
+
     <!-- Levels Section -->
     <section id="levelSelection">
       <h2 id="levelSelectionHeader">
@@ -76,26 +83,49 @@
       </div>
     </section>
 
-    <!-- Chat Window Section -->
-    <div class="chat-window">
-        <h2>Conversation History</h2>
-        <div class="chat-history" id="chatHistory">
-        <!-- Chat messages will be appended here -->
-        </div>
-        <!-- Resizer handle for the chat window -->
-        <div id="chatResizer"></div>
-        <!-- Optional: Chat input area for new messages -->
-        <div class="chat-input">
-          <input type="text" id="chatInput" class="styled-input" placeholder="Type your message here..." />
-          <button id="chatSendBtn" class="btn-submit">Send</button>
-        </div>
-    </div>
+    <!--- Description of the Level -->
+    <section>
+      <h2>Level Description:</h2>
+      <div id="description-box" class="display-box">
+        <!-- Populated by JavaScript -->
+      </div>
+    </section>
+
+    <!--- Description of the Level -->
+    <section id="guardrails-section">
+      <h2>Guardrails:</h2>
+      <div id="guardrails-box" class="display-box">
+        <!-- Populated by JavaScript -->
+      </div>
+    </section>
 
     <section>
       <h2>System Prompt:</h2>
       <div class="prompt-box">
         <!-- Populated by JavaScript -->
       </div>
+    </section>
+
+    <!-- Chat Window Section -->
+    <div class="chat-window">
+      <h2>Conversation History</h2>
+      <div class="chat-history" id="chatHistory">
+        <!-- Chat messages will be appended here -->
+      </div>
+      <!-- Resizer handle for the chat window -->
+      <div id="chatResizer"></div>
+      <!-- Optional: Chat input area for new messages -->
+      <div class="chat-input">
+        <input type="text" id="chatInput" class="styled-input" placeholder="Type your message here..." />
+        <button id="chatSendBtn" class="btn-submit">Send</button>
+      </div>
+    </div>
+
+    <section id="flagSubmissionSection" class="hidden">
+      <h2>Submit Flag</h2>
+      <p>Manual flag submission is required for this level. Enter the flag below:</p>
+      <input type="text" id="flagInput" class="styled-input" placeholder="Enter flag here..." />
+      <button id="submitFlagBtn" class="btn-submit">Submit Flag</button>
     </section>
 
     <hr />
@@ -127,14 +157,14 @@
     function toggleSidebar() {
       document.getElementById('sidebar').classList.toggle('active');
     }
-  
+
     function toggleDropdown() {
       const dropdownContent = document.getElementById('dropdownContent');
       const arrow = document.getElementById('dropdownArrow');
       dropdownContent.classList.toggle('active');
       arrow.textContent = dropdownContent.classList.contains('active') ? '▲' : '▼';
     }
-  
+
     // Toggle between native login and registration forms
     function toggleAuth() {
       const loginForm = document.getElementById('loginForm');
@@ -153,10 +183,12 @@
   </script>
 
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
+
   <footer class="footer">
     <div class="footer-links">
       <a href="https://github.com/stackviolator/open-crucible" target="_blank">
-        <svg class="footer-icon" viewBox="0 0 16 16" fill="currentColor" width="16" height="16" xmlns="http://www.w3.org/2000/svg">
+        <svg class="footer-icon" viewBox="0 0 16 16" fill="currentColor" width="16" height="16"
+          xmlns="http://www.w3.org/2000/svg">
           <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 
                   0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52 
                   -.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 
@@ -167,7 +199,8 @@
         GitHub
       </a>
       <a href="https://x.com/joshtmerrill" target="_blank">
-        <svg class="footer-icon" viewBox="0 0 24 24" fill="currentColor" width="16" height="16" xmlns="http://www.w3.org/2000/svg">
+        <svg class="footer-icon" viewBox="0 0 24 24" fill="currentColor" width="16" height="16"
+          xmlns="http://www.w3.org/2000/svg">
           <path d="M23.954 4.569a10 10 0 01-2.825.775 4.932 4.932 0 002.163-2.723 
                   9.864 9.864 0 01-3.127 1.184 4.916 4.916 0 00-8.384 4.482A13.944 13.944 0 011.671 3.149a4.822 
                   4.822 0 001.523 6.573 4.903 4.903 0 01-2.229-.616c-.054 2.281 1.581 4.415 3.949 4.89a4.935 4.935 
@@ -182,4 +215,5 @@
     </div>
   </footer>
 </body>
+
 </html>

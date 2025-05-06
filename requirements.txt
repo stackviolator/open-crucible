@@ -15,3 +15,5 @@ bcrypt>=4.0.0
 starlette
 itsdangerous
 pyyaml>=6.0.1
+huggingface_hub[cli]
+markdown
